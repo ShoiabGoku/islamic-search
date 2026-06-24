@@ -224,6 +224,7 @@
       <a href="#daily">Daily Reminder</a>
       <a href="#search">Search</a>
       <a href="#quran-library">Qur'an</a>
+      <a href="#nahj-library">Nahj al-Balagha</a>
       <a href="#maraji">Maraji'</a>
       <a href="#books">Books</a>
       <a href="#about">About</a>
@@ -335,6 +336,25 @@
   </div>
 </section>
 
+<!-- ======= NAHJ AL-BALAGHA LIBRARY (browse) ======= -->
+<section id="nahj-library">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Nahj al-Balagha · نهج البلاغة</span>
+      <h2>The Peak of Eloquence — in Full</h2>
+      <p>The complete words of Amīr al-Muʾminīn ʿAlī (عليه السلام): all the Sermons, Letters and Sayings, with English translation. Choose a section and number to read.</p>
+    </div>
+    <div class="search-shell">
+      <div class="search-box" style="justify-content:center">
+        <select id="nahjSec" style="min-width:150px;padding:12px 14px;font-size:1rem" onchange="fillNahjNums()"></select>
+        <select id="nahjNum" style="flex:1;min-width:160px;padding:12px 14px;font-size:1rem"></select>
+        <button class="btn" onclick="showNahj()">⚔ Open</button>
+      </div>
+      <div id="nahjView" style="margin-top:24px"></div>
+    </div>
+  </div>
+</section>
+
 <!-- ======= MARAJI ======= -->
 <section class="alt" id="maraji">
   <div class="wrap">
@@ -431,6 +451,7 @@
 <!-- Library data: full Qur'an (Arabic + English). Loaded as a global so it works
      both on double-click (file://) and when served. -->
 <script src="library/quran.js"></script>
+<script src="library/nahj.js"></script>
 <script>
 /* ============================================================
    DATA
@@ -525,8 +546,8 @@ const maraji = [
 
 // --- Core books ---
 const coreBooks = [
-  {ar:"القرآن الكريم", n:"The Holy Qur'an", d:"The eternal word of Allah, revealed to the Prophet Muḥammad (ص).", url:"https://tanzil.net/"},
-  {ar:"نهج البلاغة", n:"Nahj al-Balagha", d:"Sermons, letters & sayings of Imam ʿAlī (ع), compiled by al-Sharīf al-Raḍī.", url:"https://www.al-islam.org/nahjul-balagha-part-1-sermons"},
+  {ar:"القرآن الكريم", n:"The Holy Qur'an", d:"The eternal word of Allah, revealed to the Prophet Muḥammad (ص). Full text in this library.", url:"#quran-library"},
+  {ar:"نهج البلاغة", n:"Nahj al-Balagha", d:"Sermons, letters & sayings of Imam ʿAlī (ع), compiled by al-Sharīf al-Raḍī. Full text in this library.", url:"#nahj-library"},
   {ar:"الصحيفة السجادية", n:"Al-Sahifa al-Sajjadiyya", d:"The 'Psalms of Islam' — supplications of Imam al-Sajjād (ع).", url:"https://www.al-islam.org/sahifa-al-kamilah-al-sajjadiyya"},
   {ar:"الكافي", n:"Al-Kafi", d:"The foremost of the Four Books, by Shaykh al-Kulaynī.", url:"https://thaqalayn.net/book/1"},
   {ar:"من لا يحضره الفقيه", n:"Man la yahduruhu al-Faqih", d:"Of the Four Books, by Shaykh al-Ṣadūq.", url:"https://thaqalayn.net/"},
@@ -586,7 +607,9 @@ document.getElementById('booksGrid').innerHTML = coreBooks.map(b=>`
       <h3>${b.n}</h3>
       <p>${b.d}</p>
     </div>
-    <a href="${b.url}" target="_blank" rel="noopener">Read / Search ↗</a>
+    ${b.url.charAt(0)==='#'
+       ? `<a href="${b.url}">Read here ↓</a>`
+       : `<a href="${b.url}" target="_blank" rel="noopener">Read / Search ↗</a>`}
   </div>`).join('');
 
 document.getElementById('yr').textContent = new Date().getFullYear();
@@ -627,6 +650,25 @@ function searchQuran(terms, limit){
   return out;
 }
 
+// Search the complete Nahj al-Balagha held in the library (window.LIB_NAHJ)
+function nahjRef(it){
+  const A = LIB_NAHJ.abbr[it[0]];
+  const part = (typeof it[2]==='number' && it[2]>1) ? ' · ¶'+it[2] : '';
+  return A+' '+it[1]+part;
+}
+function searchNahj(terms, limit){
+  if(typeof window.LIB_NAHJ==='undefined' || !terms.length) return [];
+  const out=[];
+  for(const it of LIB_NAHJ.items){
+    const hay = norm((it[3]||'')+' '+(it[4]||''));
+    if(terms.every(t=>hay.includes(t))){
+      out.push({ar:it[3], tr:it[4], src:"Nahj al-Balagha", ref:nahjRef(it)});
+      if(out.length>=limit) return out;
+    }
+  }
+  return out;
+}
+
 function runSearch(){
   const raw = document.getElementById('q').value.trim();
   const filter = document.getElementById('srcFilter').value;
@@ -647,16 +689,20 @@ function runSearch(){
   // Full Qur'an search (skipped only when filtered to a non-Qur'an source)
   let quranHits = [];
   if(raw && (!filter || filter==="Qur'an")){ quranHits = searchQuran(terms, 60); }
-  if(!filter){ hits = hits.filter(h=>h.src!=="Qur'an"); } // the full Qur'an covers these
-  const all = hits.concat(quranHits);
+  // Full Nahj al-Balagha search
+  let nahjHits = [];
+  if(raw && (!filter || filter==="Nahj al-Balagha")){ nahjHits = searchNahj(terms, 50); }
+  // the full texts cover any curated duplicates when browsing everything
+  if(!filter){ hits = hits.filter(h=>h.src!=="Qur'an" && h.src!=="Nahj al-Balagha"); }
+  const all = hits.concat(nahjHits, quranHits);
 
   if(all.length===0){
     box.innerHTML = `<div class="no-res">No match in the built-in collection for “${raw||filter}”.<br><br>Try the <b>full libraries</b> below — your search has been prepared for them.</div>`;
     return;
   }
-  const capped = quranHits.length>=60;
-  const capNote = capped ? '+ (first 60 Quranic matches — refine to narrow)' : '';
-  const count = `<div style="text-align:center;color:var(--muted);font-size:.86rem;margin-bottom:4px">${all.length} result${all.length!==1?'s':''}${capNote} · narrations &amp; full Qur'an</div>`;
+  const capped = quranHits.length>=60 || nahjHits.length>=50;
+  const capNote = capped ? '+ (some matches capped — refine to narrow)' : '';
+  const count = `<div style="text-align:center;color:var(--muted);font-size:.86rem;margin-bottom:4px">${all.length} result${all.length!==1?'s':''}${capNote} · narrations, full Qur'an &amp; Nahj al-Balagha</div>`;
   box.innerHTML = count + all.map(h=>{
     const badge = h.src==="Qur'an" ? 'badge quran' : 'badge book';
     return `<div class="res">
@@ -713,6 +759,47 @@ function showSurah(){
     <div class="res">
       <div class="ar arabic" style="font-size:1.5rem">${v[1]} <span style="color:var(--gold);font-size:1rem">﴿${v[0]}﴾</span></div>
       <div class="tr">${v[2]}</div>
+    </div>`).join('');
+  view.scrollIntoView({behavior:'smooth'});
+}
+
+/* ---- Nahj al-Balagha library browser ---- */
+let nahjIndex = [];
+(function(){
+  if(typeof window.LIB_NAHJ==='undefined') return;
+  // build sorted unique chapter numbers per section
+  const seen=[{},{},{}];
+  LIB_NAHJ.items.forEach(it=>{ seen[it[0]][it[1]]=true; });
+  nahjIndex = seen.map(o=>Object.keys(o).map(Number).sort((a,b)=>a-b));
+  const sec=document.getElementById('nahjSec');
+  if(sec){
+    sec.innerHTML = LIB_NAHJ.abbr.map((a,i)=>`<option value="${i}">${a}s</option>`).join('');
+    fillNahjNums();
+  }
+})();
+function fillNahjNums(){
+  if(typeof window.LIB_NAHJ==='undefined') return;
+  const si=+document.getElementById('nahjSec').value;
+  const abbr=LIB_NAHJ.abbr[si];
+  document.getElementById('nahjNum').innerHTML =
+    nahjIndex[si].map(n=>`<option value="${n}">${abbr} ${n}</option>`).join('');
+}
+function showNahj(){
+  if(typeof window.LIB_NAHJ==='undefined') return;
+  const si=+document.getElementById('nahjSec').value;
+  const num=+document.getElementById('nahjNum').value;
+  const abbr=LIB_NAHJ.abbr[si];
+  const segs=LIB_NAHJ.items.filter(it=>it[0]===si && it[1]===num)
+                           .sort((a,b)=>(a[2]>b[2]?1:-1));
+  const view=document.getElementById('nahjView');
+  if(!segs.length){view.innerHTML='';return;}
+  view.innerHTML = `<div style="text-align:center;margin-bottom:14px">
+      <div class="ar arabic" style="font-size:1.8rem;color:var(--green-800)">${abbr==='Sermon'?'الخطبة':abbr==='Letter'?'الكتاب':'الحكمة'} ${num}</div>
+      <div style="color:var(--muted)">${abbr} ${num} — Nahj al-Balagha · ${segs.length} passage${segs.length!==1?'s':''}</div>
+    </div>` + segs.map(s=>`
+    <div class="res">
+      <div class="ar arabic" style="font-size:1.4rem">${s[3]||''}</div>
+      <div class="tr">${s[4]||''}</div>
     </div>`).join('');
   view.scrollIntoView({behavior:'smooth'});
 }
