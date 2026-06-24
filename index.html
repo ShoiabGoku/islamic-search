@@ -8,6 +8,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<meta name="theme-color" content="#0e3d2e" />
+<link rel="manifest" href="manifest.json" />
+<script>
+  // Apply saved preferences before paint (prevents flash)
+  try{
+    var P=JSON.parse(localStorage.getItem('noor_prefs')||'{}');
+    var cls=document.documentElement;
+    if(P.theme==='dark') document.write('<style>body{background:#0a1712}</style>');
+  }catch(e){}
+</script>
 <style>
   :root{
     --green-900:#0a2e23;
@@ -201,16 +211,100 @@
   .foot-bottom{border-top:1px solid var(--line);padding-top:18px;text-align:center;font-size:.8rem;opacity:.7}
   .salawat{text-align:center;font-family:'Amiri',serif;font-size:1.4rem;color:var(--gold-light);margin-bottom:20px}
 
+  /* ----- reading controls + result actions ----- */
+  .res .ar{font-size:calc(1.35rem * var(--ar-scale,1))}
+  .row-actions{display:inline-flex;gap:6px;margin-left:auto}
+  .ic-btn{font-family:inherit;font-size:.72rem;border:1px solid var(--line);background:var(--cream-2);color:var(--green-700);
+    border-radius:8px;padding:4px 9px;cursor:pointer;transition:.15s}
+  .ic-btn:hover{background:var(--green-700);color:var(--cream)}
+  .ic-btn.on{background:var(--gold);color:var(--green-900);border-color:var(--gold)}
+  body.hide-tr #results .tr, body.hide-tr #surahView .tr, body.hide-tr #nahjView .tr{display:none}
+  .reader-nav{display:flex;justify-content:space-between;gap:10px;margin:14px 0}
+  .reader-nav button{flex:1}
+
+  /* ----- floating tool dock ----- */
+  .float-tools{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:60}
+  .float-tools button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);cursor:pointer;
+    background:var(--green-700);color:var(--gold-light);font-size:1.05rem;box-shadow:var(--shadow);transition:.18s}
+  .float-tools button:hover{background:var(--gold);color:var(--green-900);transform:translateY(-2px)}
+
+  /* ----- companion tools ----- */
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+  .tool-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 6px 18px rgba(10,46,35,.07);text-align:center;display:flex;flex-direction:column}
+  .tool-card .ic{font-size:1.6rem;margin-bottom:6px}
+  .tool-card h4{font-family:'Cormorant Garamond',serif;color:var(--green-800);font-size:1.25rem;margin-bottom:8px}
+  .tool-card .big{font-family:'Amiri',serif;font-size:1.5rem;color:var(--green-700);margin:4px 0}
+  .tool-card .lbl{color:var(--muted);font-size:.82rem}
+  .tool-card input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;margin:5px 0;background:var(--cream-2);color:var(--ink)}
+  .tool-card .btn{padding:9px 14px;font-size:.85rem;margin-top:6px;align-self:center}
+  .ptimes{list-style:none;text-align:left;margin-top:8px}
+  .ptimes li{display:flex;justify-content:space-between;padding:5px 2px;border-bottom:1px dashed var(--line);font-size:.9rem}
+  .ptimes li b{color:var(--green-700)}
+  .tasbih-count{font-size:2.6rem;font-weight:600;color:var(--gold);font-family:'Cormorant Garamond',serif}
+  .tasbih-dhikr{font-family:'Amiri',serif;font-size:1.4rem;color:var(--green-800)}
+  .compass{width:90px;height:90px;border-radius:50%;border:3px solid var(--line);margin:8px auto;position:relative;display:grid;place-items:center}
+  .compass .needle{font-size:1.8rem;transition:transform .4s;color:var(--gold)}
+
+  /* ----- bookmarks modal ----- */
+  .modal{position:fixed;inset:0;background:rgba(8,20,15,.6);display:none;z-index:80;padding:24px;overflow:auto}
+  .modal.open{display:block}
+  .modal-inner{max-width:760px;margin:40px auto;background:var(--cream-2);border:1px solid var(--line);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow)}
+  .modal-inner h3{color:var(--green-800);font-size:1.6rem;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+  .modal-inner .close{cursor:pointer;border:none;background:none;font-size:1.4rem;color:var(--muted)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--green-800);color:var(--gold-light);
+    padding:10px 18px;border-radius:30px;font-size:.85rem;opacity:0;pointer-events:none;transition:.25s;z-index:90;box-shadow:var(--shadow)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .dedication{text-align:center;margin-top:22px;padding:18px;border-top:1px solid var(--line)}
+  .dedication .ar{font-family:'Amiri',serif;font-size:1.5rem;color:var(--gold);margin-bottom:6px}
+  .dedication p{color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:1.1rem}
+
+  /* ----- DARK MODE ----- */
+  body.dark{background:#0a1712;color:#e8e6db}
+  body.dark .alt{background:linear-gradient(180deg,#0c1a14,#0a1712)}
+  body.dark section{background:transparent}
+  body.dark .search-box,body.dark .res,body.dark .marja,body.dark .pillar,body.dark .no-res,body.dark .tool-card,body.dark .modal-inner{background:#11221b;border-color:rgba(216,182,95,.20)}
+  body.dark .rcard{background:linear-gradient(160deg,#11221b,#15281f);border-color:rgba(216,182,95,.20)}
+  body.dark .search-box input{color:#e8e6db}
+  body.dark .search-box input::placeholder{color:#7f9488}
+  body.dark .search-box select,body.dark #surahPick,body.dark #nahjSec,body.dark #nahjNum,body.dark .tool-card input{background:#0c1a14;color:#e8e6db;border-color:rgba(216,182,95,.20)}
+  body.dark .sec-head h2,body.dark .modal-inner h3{color:var(--gold-light)}
+  body.dark .sec-head p,body.dark .marja .desc,body.dark .marja .status,body.dark .pillar small,body.dark #about p,body.dark .res .meta span,body.dark .tool-card .lbl{color:#9bb0a4}
+  body.dark .marja h3,body.dark .pillar h4,body.dark .res .ar,body.dark .rcard .ar,body.dark .tool-card h4,body.dark .tool-card .big,body.dark .tasbih-dhikr{color:var(--gold-light)}
+  body.dark .res .tr,body.dark .rcard .tr,body.dark .ptimes li b{color:#e8e6db}
+  body.dark .marja .av{color:var(--gold-light)}
+  body.dark .ic-btn{background:#0c1a14;color:var(--gold-light)}
+
   @media(max-width:820px){
     .daily-grid{grid-template-columns:1fr}
     nav.links{display:none}
     .menu-btn{display:block}
     nav.links.open{display:flex;position:absolute;top:68px;left:0;right:0;flex-direction:column;background:var(--green-900);padding:14px;border-bottom:1px solid var(--line)}
     footer .cols{grid-template-columns:1fr}
+    .float-tools{right:10px;bottom:10px}
+    .float-tools button{width:42px;height:42px;font-size:.95rem}
   }
 </style>
 </head>
 <body>
+
+<!-- ======= FLOATING TOOLS ======= -->
+<div class="float-tools">
+  <button id="themeBtn" title="Dark / light mode" onclick="toggleTheme()">🌙</button>
+  <button title="Smaller Arabic" onclick="setAr(-1)">A−</button>
+  <button title="Larger Arabic" onclick="setAr(1)">A+</button>
+  <button id="trBtn" title="Show / hide translation" onclick="toggleTr()">۞</button>
+  <button title="My bookmarks" onclick="openBookmarks()">★</button>
+  <button title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+</div>
+
+<!-- ======= BOOKMARKS MODAL ======= -->
+<div class="modal" id="bmModal">
+  <div class="modal-inner">
+    <h3>My Bookmarks ★ <button class="close" onclick="closeBookmarks()">✕</button></h3>
+    <div id="bmList"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
 
 <!-- ======= NAV ======= -->
 <header class="nav">
@@ -222,6 +316,7 @@
     <button class="menu-btn" onclick="document.getElementById('navlinks').classList.toggle('open')">☰</button>
     <nav class="links" id="navlinks">
       <a href="#daily">Daily Reminder</a>
+      <a href="#companion">Companion</a>
       <a href="#search">Search</a>
       <a href="#quran-library">Qur'an</a>
       <a href="#nahj-library">Nahj al-Balagha</a>
@@ -266,6 +361,66 @@
     </div>
   </section>
 </div>
+
+<!-- ======= DAILY COMPANION ======= -->
+<section class="alt" id="companion">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Your Daily Companion</span>
+      <h2>Date, Prayer Times &amp; Dhikr</h2>
+      <p>The Islamic date, prayer times for your city, the direction of the Qibla, and a tasbīḥ counter — all in one place.</p>
+    </div>
+    <div class="tools-grid">
+
+      <div class="tool-card">
+        <div class="ic">🌙</div>
+        <h4>Islamic Date</h4>
+        <div class="big" id="hijriDate">…</div>
+        <div class="lbl" id="gregDate"></div>
+        <div class="lbl" id="hijriAr" style="font-family:'Amiri',serif;font-size:1.05rem;margin-top:6px"></div>
+      </div>
+
+      <div class="tool-card">
+        <div class="ic">🕌</div>
+        <h4>Prayer Times</h4>
+        <input type="text" id="ptCity" placeholder="City (e.g. Karbala)" />
+        <input type="text" id="ptCountry" placeholder="Country (e.g. Iraq)" />
+        <button class="btn" onclick="getPrayerTimes()">Get Times</button>
+        <ul class="ptimes" id="ptList"></ul>
+        <div class="lbl" id="ptNote"></div>
+      </div>
+
+      <div class="tool-card">
+        <div class="ic">🧭</div>
+        <h4>Qibla Direction</h4>
+        <div class="compass"><span class="needle" id="qiblaNeedle">🕋</span></div>
+        <div class="lbl" id="qiblaText">Find the direction to the Kaʿbah.</div>
+        <button class="btn" onclick="findQibla()">Find Qibla</button>
+      </div>
+
+      <div class="tool-card">
+        <div class="ic">📿</div>
+        <h4>Tasbīḥ Counter</h4>
+        <div class="tasbih-dhikr" id="tasbihDhikr">سُبْحَانَ اللَّه</div>
+        <div class="lbl" id="tasbihTarget"></div>
+        <div class="tasbih-count" id="tasbihCount">0</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button class="btn gold" onclick="tasbihTap()" style="padding:9px 22px">+1</button>
+          <button class="btn" onclick="tasbihReset()" style="background:var(--green-700)">Reset</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Duʿāʾ of the day -->
+    <div class="rcard" style="margin-top:22px;text-align:center;max-width:760px;margin-left:auto;margin-right:auto">
+      <span class="tag" style="justify-content:center"><span class="dot"></span> Duʿāʾ of the Day · دعاء اليوم</span>
+      <div class="ar" id="dua-ar" style="text-align:center;font-size:1.5rem"></div>
+      <div class="tr" id="dua-tr" style="text-align:center"></div>
+      <div class="src" id="dua-src"></div>
+    </div>
+  </div>
+</section>
 
 <!-- ======= SEARCH ======= -->
 <section id="search">
@@ -415,6 +570,11 @@
     <p style="color:var(--muted);text-align:center;font-size:.9rem">
       <strong>A note on authenticity:</strong> Always confirm rulings (aḥkām) with the risāla of your own Marji', and verify narrations against their original chains. May Allah accept this effort and count it among the deeds done for His sake.
     </p>
+
+    <div class="dedication">
+      <div class="ar">إِلَىٰ أُمِّي ۖ رَبِّ ارْحَمْهَا كَمَا رَبَّتْنِي صَغِيرًا</div>
+      <p>For the love of my mother — every good that comes from this work,<br>may its reward reach her. “My Lord, have mercy upon her as she raised me when I was small.”</p>
+    </div>
   </div>
 </section>
 
@@ -703,17 +863,7 @@ function runSearch(){
   const capped = quranHits.length>=60 || nahjHits.length>=50;
   const capNote = capped ? '+ (some matches capped — refine to narrow)' : '';
   const count = `<div style="text-align:center;color:var(--muted);font-size:.86rem;margin-bottom:4px">${all.length} result${all.length!==1?'s':''}${capNote} · narrations, full Qur'an &amp; Nahj al-Balagha</div>`;
-  box.innerHTML = count + all.map(h=>{
-    const badge = h.src==="Qur'an" ? 'badge quran' : 'badge book';
-    return `<div class="res">
-      <div class="ar arabic">${highlight(h.ar,[raw])}</div>
-      <div class="tr">“${highlight(h.tr,terms)}”</div>
-      <div class="meta">
-        <span class="${badge}">${h.src}</span>
-        <span style="color:var(--muted);font-size:.85rem">${h.ref}</span>
-      </div>
-    </div>`;
-  }).join('');
+  box.innerHTML = count + all.map(h=>resCard({ar:h.ar,tr:h.tr,src:h.src,ref:h.ref,terms})).join('');
 }
 
 function quick(t){ document.getElementById('q').value=t; runSearch(); document.getElementById('search').scrollIntoView({behavior:'smooth'}); }
@@ -744,24 +894,29 @@ updateExt('');
     sel.innerHTML = LIB_QURAN.map(s=>`<option value="${s.s}">${s.s}. ${s.nt} — ${s.ne} (${s.v.length})</option>`).join('');
   }
 })();
-function showSurah(){
+function showSurah(scrollAyah){
   if(typeof window.LIB_QURAN==='undefined') return;
   const id=+document.getElementById('surahPick').value;
-  const su=LIB_QURAN.find(s=>s.s===id);
+  const idx=LIB_QURAN.findIndex(s=>s.s===id);
+  const su=LIB_QURAN[idx];
   const view=document.getElementById('surahView');
   if(!su){view.innerHTML='';return;}
+  if(history.replaceState) history.replaceState(null,'','#'+su.s);
+  const prev=idx>0?LIB_QURAN[idx-1]:null, next=idx<LIB_QURAN.length-1?LIB_QURAN[idx+1]:null;
+  const nav=`<div class="reader-nav">
+      <button class="btn" ${prev?'':'disabled'} onclick="gotoSurah(${prev?prev.s:0})">‹ ${prev?prev.nt:''}</button>
+      <button class="btn" ${next?'':'disabled'} onclick="gotoSurah(${next?next.s:0})">${next?next.nt:''} ›</button>
+    </div>`;
   const basmala=(id!==1 && id!==9)
-    ? `<div class="res" style="text-align:center;border-left-color:var(--gold)"><div class="ar arabic" style="text-align:center;font-size:1.5rem">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>` : '';
+    ? `<div class="res" style="text-align:center;border-left-color:var(--gold)"><div class="ar arabic" style="text-align:center">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>` : '';
   view.innerHTML = `<div style="text-align:center;margin-bottom:14px">
       <div class="ar arabic" style="font-size:2rem;color:var(--green-800)">${su.na}</div>
       <div style="color:var(--muted)">Sūrah ${su.s} · ${su.nt} — ${su.ne} · ${su.v.length} verses</div>
-    </div>` + basmala + su.v.map(v=>`
-    <div class="res">
-      <div class="ar arabic" style="font-size:1.5rem">${v[1]} <span style="color:var(--gold);font-size:1rem">﴿${v[0]}﴾</span></div>
-      <div class="tr">${v[2]}</div>
-    </div>`).join('');
-  view.scrollIntoView({behavior:'smooth'});
+    </div>` + nav + basmala + su.v.map(v=>resCard({ar:v[1],tr:v[2],ref:'Qurʼan '+su.s+':'+v[0],num:v[0],audio:ayahAudio(su.s,v[0])})).join('') + nav;
+  if(scrollAyah){ const cards=view.querySelectorAll('.res'); const off=(id!==1&&id!==9?1:0); const el=cards[off+(scrollAyah-1)]; if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+  else view.scrollIntoView({behavior:'smooth'});
 }
+function gotoSurah(s){ if(!s) return; document.getElementById('surahPick').value=s; showSurah(); }
 
 /* ---- Nahj al-Balagha library browser ---- */
 let nahjIndex = [];
@@ -789,24 +944,234 @@ function showNahj(){
   const si=+document.getElementById('nahjSec').value;
   const num=+document.getElementById('nahjNum').value;
   const abbr=LIB_NAHJ.abbr[si];
-  const segs=LIB_NAHJ.items.filter(it=>it[0]===si && it[1]===num)
-                           .sort((a,b)=>(a[2]>b[2]?1:-1));
+  const segs=LIB_NAHJ.items.filter(it=>it[0]===si && it[1]===num).sort((a,b)=>(a[2]>b[2]?1:-1));
   const view=document.getElementById('nahjView');
   if(!segs.length){view.innerHTML='';return;}
-  view.innerHTML = `<div style="text-align:center;margin-bottom:14px">
+  const nums=nahjIndex[si]; const pos=nums.indexOf(num);
+  const prev=pos>0?nums[pos-1]:null, next=pos>=0&&pos<nums.length-1?nums[pos+1]:null;
+  const nav=`<div class="reader-nav">
+      <button class="btn" ${prev?'':'disabled'} onclick="gotoNahj(${prev||0})">‹ ${prev?abbr+' '+prev:''}</button>
+      <button class="btn" ${next?'':'disabled'} onclick="gotoNahj(${next||0})">${next?abbr+' '+next:''} ›</button>
+    </div>`;
+  const head=`<div style="text-align:center;margin-bottom:14px">
       <div class="ar arabic" style="font-size:1.8rem;color:var(--green-800)">${abbr==='Sermon'?'الخطبة':abbr==='Letter'?'الكتاب':'الحكمة'} ${num}</div>
       <div style="color:var(--muted)">${abbr} ${num} — Nahj al-Balagha · ${segs.length} passage${segs.length!==1?'s':''}</div>
-    </div>` + segs.map(s=>`
-    <div class="res">
-      <div class="ar arabic" style="font-size:1.4rem">${s[3]||''}</div>
-      <div class="tr">${s[4]||''}</div>
-    </div>`).join('');
+    </div>`;
+  view.innerHTML = head + nav + segs.map(s=>resCard({ar:s[3]||'',tr:s[4]||'',ref:abbr+' '+num+(s[2]&&s[2]>1?' · ¶'+s[2]:'')})).join('') + nav;
   view.scrollIntoView({behavior:'smooth'});
 }
+function gotoNahj(n){ if(!n) return; document.getElementById('nahjNum').value=n; showNahj(); }
 
-// search on Enter
+/* ============================================================
+   SHARED CARD + HIGHLIGHT + ACTIONS
+   ============================================================ */
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function normChar(c){
+  if(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/.test(c)) return '';
+  c=c.toLowerCase();
+  if('أإآٱ'.indexOf(c)>=0) return 'ا';
+  if(c==='ى') return 'ي';
+  if(c==='ؤ') return 'و';
+  if(c==='ئ') return 'ي';
+  if(c==='ة') return 'ه';
+  return c;
+}
+// diacritic-insensitive highlighter (works for Arabic and English)
+function highlightNorm(text, terms){
+  terms=(terms||[]).filter(t=>t&&t.length>1);
+  if(!terms.length) return esc(text);
+  let normStr='', pos=[];
+  for(let i=0;i<text.length;i++){ const nc=normChar(text[i]); if(nc){ normStr+=nc; pos.push(i); } }
+  const ranges=[];
+  for(const t of terms){
+    let from=0,idx;
+    while((idx=normStr.indexOf(t,from))!==-1){ ranges.push([pos[idx], pos[idx+t.length-1]+1]); from=idx+t.length; }
+  }
+  if(!ranges.length) return esc(text);
+  ranges.sort((a,b)=>a[0]-b[0]);
+  const merged=[ranges[0]];
+  for(let k=1;k<ranges.length;k++){ const last=merged[merged.length-1];
+    if(ranges[k][0]<=last[1]) last[1]=Math.max(last[1],ranges[k][1]); else merged.push(ranges[k]); }
+  let out='',cur=0;
+  for(const r of merged){ out+=esc(text.slice(cur,r[0]))+'<mark>'+esc(text.slice(r[0],r[1]))+'</mark>'; cur=r[1]; }
+  return out+esc(text.slice(cur));
+}
+function resCard(o){
+  const terms=o.terms||[];
+  const badge = o.src ? `<span class="badge ${o.src==="Qur'an"?'quran':'book'}">${esc(o.src)}</span>` : '';
+  const audioBtn = o.audio ? `<button class="ic-btn" onclick="playAudio('${o.audio}')">▶</button>` : '';
+  const arHTML = highlightNorm(o.ar||'', terms);
+  const trHTML = highlightNorm(o.tr||'', terms);
+  return `<div class="res" data-ar="${esc(o.ar||'')}" data-tr="${esc(o.tr||'')}" data-ref="${esc(o.ref||'')}">
+    <div class="ar arabic">${arHTML}${o.num?` <span style="color:var(--gold);font-size:1rem">﴿${o.num}﴾</span>`:''}</div>
+    ${o.tr?`<div class="tr">“${trHTML}”</div>`:''}
+    <div class="meta">${badge}
+      <span style="color:var(--muted);font-size:.85rem">${esc(o.ref||'')}</span>
+      <span class="row-actions">${audioBtn}
+        <button class="ic-btn" title="Copy" onclick="copyRes(this)">⧉</button>
+        <button class="ic-btn bm" title="Bookmark" onclick="toggleBm(this)">${isBookmarked(o.ref)?'★':'☆'}</button>
+      </span>
+    </div>
+  </div>`;
+}
+
+/* ---- bookmarks (localStorage) ---- */
+function getBms(){ try{return JSON.parse(localStorage.getItem('noor_bookmarks')||'[]')}catch(e){return[]} }
+function setBms(a){ localStorage.setItem('noor_bookmarks',JSON.stringify(a)); }
+function isBookmarked(ref){ return !!ref && getBms().some(b=>b.ref===ref); }
+function toggleBm(btn){
+  const r=btn.closest('.res'); const o={ar:r.dataset.ar,tr:r.dataset.tr,ref:r.dataset.ref};
+  let a=getBms(); const i=a.findIndex(b=>b.ref===o.ref);
+  if(i>=0){ a.splice(i,1); btn.textContent='☆'; toast('Bookmark removed'); }
+  else { a.unshift(o); btn.textContent='★'; toast('Bookmarked ★'); }
+  setBms(a);
+}
+function copyRes(btn){
+  const r=btn.closest('.res');
+  const txt=`${r.dataset.ar}\n\n${r.dataset.tr}\n— ${r.dataset.ref}`;
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(()=>toast('Copied ✓'),()=>toast('Copy failed')); }
+  else toast('Copy not supported');
+}
+function openBookmarks(){
+  const a=getBms(); const el=document.getElementById('bmList');
+  el.innerHTML = a.length ? a.map(o=>resCard({ar:o.ar,tr:o.tr,ref:o.ref})).join('')
+    : '<div class="no-res">No bookmarks yet. Tap ☆ on any verse or narration to save it here.</div>';
+  document.getElementById('bmModal').classList.add('open');
+}
+function closeBookmarks(){ document.getElementById('bmModal').classList.remove('open'); }
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(window._tt); window._tt=setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+/* ---- preferences: theme, Arabic size, translation ---- */
+function loadPrefs(){ try{return JSON.parse(localStorage.getItem('noor_prefs')||'{}')}catch(e){return{}} }
+let prefs=loadPrefs();
+function savePrefs(){ localStorage.setItem('noor_prefs',JSON.stringify(prefs)); }
+function applyPrefs(){
+  document.body.classList.toggle('dark', prefs.theme==='dark');
+  document.body.style.setProperty('--ar-scale', prefs.ar||1);
+  document.body.classList.toggle('hide-tr', !!prefs.hideTr);
+  const tb=document.getElementById('themeBtn'); if(tb) tb.textContent= prefs.theme==='dark'?'☀️':'🌙';
+  const trb=document.getElementById('trBtn'); if(trb) trb.classList.toggle('on', !!prefs.hideTr);
+}
+function toggleTheme(){ prefs.theme = prefs.theme==='dark'?'light':'dark'; savePrefs(); applyPrefs(); }
+function setAr(d){ prefs.ar=Math.round((Math.min(1.8,Math.max(0.8,(+prefs.ar||1)+d*0.1)))*100)/100; savePrefs(); applyPrefs(); toast('Arabic size '+Math.round(prefs.ar*100)+'%'); }
+function toggleTr(){ prefs.hideTr=!prefs.hideTr; savePrefs(); applyPrefs(); toast(prefs.hideTr?'Arabic only':'Translation shown'); }
+applyPrefs();
+
+/* ---- audio recitation (streamed, no download) ---- */
+let _audio;
+function ayahAudio(s,a){ const p=n=>String(n).padStart(3,'0'); return 'https://everyayah.com/data/Alafasy_128kbps/'+p(s)+p(a)+'.mp3'; }
+function playAudio(url){
+  if(_audio){ _audio.pause(); }
+  _audio=new Audio(url);
+  _audio.play().then(()=>toast('▶ Reciting')).catch(()=>toast('Audio unavailable offline'));
+}
+
+/* ============================================================
+   DAILY COMPANION
+   ============================================================ */
+// Islamic (Hijri) date — computed offline via Intl
+(function(){
+  const now=new Date();
+  try{ document.getElementById('hijriDate').textContent =
+    new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',weekday:'long'}).format(now); }
+  catch(e){ document.getElementById('hijriDate').textContent='—'; }
+  document.getElementById('gregDate').textContent =
+    now.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  try{ document.getElementById('hijriAr').textContent =
+    new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}).format(now); }catch(e){}
+})();
+
+// Prayer times via Aladhan (Shia Ithnā ʿAsharī method)
+function getPrayerTimes(){
+  const city=document.getElementById('ptCity').value.trim();
+  const country=document.getElementById('ptCountry').value.trim();
+  const list=document.getElementById('ptList'); const note=document.getElementById('ptNote');
+  if(!city){ note.textContent='Please enter a city.'; return; }
+  note.textContent='Loading…'; list.innerHTML='';
+  prefs.city=city; prefs.country=country; savePrefs();
+  const url='https://api.aladhan.com/v1/timingsByCity?city='+encodeURIComponent(city)+'&country='+encodeURIComponent(country)+'&method=0';
+  fetch(url).then(r=>r.json()).then(d=>{
+    if(!d||d.code!==200){ note.textContent='City not found — check spelling.'; return; }
+    const t=d.data.timings;
+    const want=[['Fajr','Fajr'],['Sunrise','Sunrise'],['Dhuhr','Ẓuhr'],['Asr','ʿAṣr'],['Maghrib','Maghrib'],['Isha','ʿIshāʾ']];
+    list.innerHTML=want.map(w=>`<li><span>${w[1]}</span><b>${t[w[0]]}</b></li>`).join('');
+    note.textContent='Method: Shia Ithnā ʿAsharī (Leva, Qum)';
+  }).catch(()=>{ note.textContent='Could not load times (are you offline?).'; });
+}
+if(prefs.city){ document.getElementById('ptCity').value=prefs.city; document.getElementById('ptCountry').value=prefs.country||''; getPrayerTimes(); }
+
+// Qibla direction (great-circle bearing to the Kaʿbah)
+function findQibla(){
+  const txt=document.getElementById('qiblaText');
+  if(!navigator.geolocation){ txt.textContent='Geolocation is not available.'; return; }
+  txt.textContent='Locating you…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    const lat=p.coords.latitude*Math.PI/180, lon=p.coords.longitude*Math.PI/180;
+    const klat=21.4225*Math.PI/180, klon=39.8262*Math.PI/180, dl=klon-lon;
+    let b=Math.atan2(Math.sin(dl), Math.cos(lat)*Math.tan(klat)-Math.sin(lat)*Math.cos(dl))*180/Math.PI;
+    b=(b+360)%360;
+    document.getElementById('qiblaNeedle').style.transform='rotate('+b+'deg)';
+    txt.textContent='Qibla: '+b.toFixed(0)+'° from true North.';
+  },()=>{ txt.textContent='Location permission was denied.'; });
+}
+
+// Tasbīḥ counter (Tasbīḥ of al-Zahrāʾ ع)
+const tasbihCycle=[['سُبْحَانَ اللَّه',33],['الْحَمْدُ لِلَّه',33],['اللَّهُ أَكْبَر',34]];
+let tasbih = prefs.tasbih || {i:0,c:0,total:0};
+function tasbihRender(){
+  document.getElementById('tasbihDhikr').textContent=tasbihCycle[tasbih.i][0];
+  document.getElementById('tasbihTarget').textContent='Target '+tasbihCycle[tasbih.i][1]+' · total '+tasbih.total;
+  document.getElementById('tasbihCount').textContent=tasbih.c;
+}
+function tasbihTap(){
+  tasbih.c++; tasbih.total++;
+  if(tasbih.c>=tasbihCycle[tasbih.i][1]){ tasbih.c=0; tasbih.i=(tasbih.i+1)%tasbihCycle.length; toast('✓ '+tasbihCycle[tasbih.i][0]); }
+  prefs.tasbih=tasbih; savePrefs(); tasbihRender();
+}
+function tasbihReset(){ tasbih={i:0,c:0,total:0}; prefs.tasbih=tasbih; savePrefs(); tasbihRender(); }
+tasbihRender();
+
+// Duʿāʾ of the day
+const duas=[
+  {ar:"رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",tr:"Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.",src:"Qurʾan 2:201"},
+  {ar:"اللَّهُمَّ عَجِّلْ لِوَلِيِّكَ الْفَرَجَ",tr:"O Allah, hasten the relief of Your awaited guardian (al-Mahdī, may Allah hasten his reappearance).",src:"Supplication for the Imam of the Age"},
+  {ar:"رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي",tr:"My Lord, expand for me my breast and ease for me my task.",src:"Qurʾan 20:25–26"},
+  {ar:"اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ وَعَجِّلْ فَرَجَهُمْ",tr:"O Allah, send blessings upon Muḥammad and the family of Muḥammad, and hasten their relief.",src:"Ṣalawāt"},
+  {ar:"حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",tr:"Allah is sufficient for us, and He is the best Disposer of affairs.",src:"Qurʾan 3:173"},
+  {ar:"يَا مَنِ اسْمُهُ دَوَاءٌ وَذِكْرُهُ شِفَاءٌ",tr:"O He whose Name is a remedy and whose remembrance is a cure.",src:"Duʿāʾ from the Ahl al-Bayt (ع)"},
+  {ar:"رَبِّ زِدْنِي عِلْمًا",tr:"My Lord, increase me in knowledge.",src:"Qurʾan 20:114"}
+];
+(function(){ const d=duas[dayIndex(duas.length)];
+  document.getElementById('dua-ar').textContent=d.ar;
+  document.getElementById('dua-tr').textContent='“'+d.tr+'”';
+  document.getElementById('dua-src').textContent='— '+d.src;
+})();
+
+/* ---- deep-link to a verse, e.g. #36 or #36:9 ---- */
+function handleHash(){
+  const m=(location.hash||'').replace('#','').match(/^(\d{1,3})(?::(\d{1,3}))?$/);
+  if(m && typeof window.LIB_QURAN!=='undefined'){
+    const s=+m[1]; const pick=document.getElementById('surahPick');
+    if(pick && LIB_QURAN.some(x=>x.s===s)){ pick.value=s; showSurah(m[2]?+m[2]:null); }
+  }
+}
+window.addEventListener('hashchange',handleHash);
+if(location.hash) setTimeout(handleHash,80);
+
+/* ---- PWA: offline support when served over https ---- */
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+// search on Enter + search-as-you-type
 document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') runSearch(); });
+let _st; document.getElementById('q').addEventListener('input',()=>{ clearTimeout(_st); _st=setTimeout(runSearch,260); });
 document.getElementById('srcFilter').addEventListener('change',runSearch);
+// close bookmarks modal on backdrop click
+document.getElementById('bmModal').addEventListener('click',e=>{ if(e.target.id==='bmModal') closeBookmarks(); });
 </script>
 </body>
 </html>

@@ -1,0 +1,14 @@
+{
+  "name": "Noor al-Hidayah — Shia Islamic Portal",
+  "short_name": "Noor al-Hidayah",
+  "description": "The Maraji', the Holy Qur'an, Nahj al-Balagha, daily reminders, prayer times and unified search for authentic narrations.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e3d2e",
+  "theme_color": "#0e3d2e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
