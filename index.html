@@ -223,6 +223,7 @@
     <nav class="links" id="navlinks">
       <a href="#daily">Daily Reminder</a>
       <a href="#search">Search</a>
+      <a href="#quran-library">Qur'an</a>
       <a href="#maraji">Maraji'</a>
       <a href="#books">Books</a>
       <a href="#about">About</a>
@@ -304,14 +305,32 @@
       <!-- federated external search -->
       <div class="ext-search">
         <h3>Search the Full Libraries</h3>
-        <p>Type a word or Arabic phrase above, then open it directly in the major authenticated Shia digital libraries:</p>
+        <p>The full Qur'an (all 6,236 verses) is searched above. For the complete hadith corpora, open your query directly in the major authenticated Shia digital libraries:</p>
         <div class="ext-btns" id="extBtns">
-          <a href="#" data-base="quran">📖 Search the Qur'an (Tanzil)</a>
+          <a href="#" data-base="quran">📖 Qur'an (Tanzil)</a>
           <a href="#" data-base="thaqalayn">📚 Hadith Library (Thaqalayn.net)</a>
           <a href="#" data-base="alislam">🕌 Al-Islam.org Library</a>
           <a href="#" data-base="nahj">⚔ Nahj al-Balagha</a>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= QURAN LIBRARY (browse) ======= -->
+<section class="alt" id="quran-library">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">The Holy Qur'an · المصحف الشريف</span>
+      <h2>Read the Qur'an — Sūrah by Sūrah</h2>
+      <p>The complete Book is held in this library — all 114 chapters and 6,236 verses, with English translation. Select a chapter to read.</p>
+    </div>
+    <div class="search-shell">
+      <div class="search-box" style="justify-content:center">
+        <select id="surahPick" style="flex:1;min-width:240px;padding:12px 14px;font-size:1rem"></select>
+        <button class="btn" onclick="showSurah()">📖 Open Sūrah</button>
+      </div>
+      <div id="surahView" style="margin-top:24px"></div>
     </div>
   </div>
 </section>
@@ -409,6 +428,9 @@
   </div>
 </footer>
 
+<!-- Library data: full Qur'an (Arabic + English). Loaded as a global so it works
+     both on double-click (file://) and when served. -->
+<script src="library/quran.js"></script>
 <script>
 /* ============================================================
    DATA
@@ -492,7 +514,7 @@ const corpus = [
 // --- Maraji' al-Taqleed ---
 const maraji = [
   {n:"Sayyid Ali al-Sistani", ar:"س", status:"Najaf · Living", alive:true, desc:"The most widely followed Marji' today, based in the holy city of Najaf, known for his measured jurisprudence.", books:["Minhāj al-Ṣāliḥīn","Tawḍīḥ al-Masāʾil","Al-Masāʾil al-Muntakhaba","Islamic Laws (English)"], site:"https://www.sistani.org/english/"},
-  {n:"Sayyid Ali Khamenei", ar:"خ", status:"Mashhad/Qom · Living", alive:true, desc:"Supreme Leader of Iran and a Marji' followed by many, with extensive rulings on contemporary issues.", books:["Ajwibat al-Istiftāʾāt","Risāla-yi Ājwiba","Practical Laws of Islam"], site:"https://www.leader.ir/en"},
+  {n:"Sayyid Ali Khamenei", ar:"خ", status:"Iran · Late (raḥimahu Allāh)", alive:false, desc:"A Marji' followed by many, with extensive rulings on contemporary issues. May Allah have mercy upon him.", books:["Ajwibat al-Istiftāʾāt","Risāla-yi Ājwiba","Practical Laws of Islam"], site:"https://www.leader.ir/en"},
   {n:"Sayyid Wahid Khorasani", ar:"و", status:"Qom · Living", alive:true, desc:"A senior teacher of the Qom seminary, respected for his depth in usul and theology.", books:["Minhāj al-Ṣāliḥīn","Tawḍīḥ al-Masāʾil"], site:"https://wahidkhorasani.com/"},
   {n:"Shaykh Makarem Shirazi", ar:"م", status:"Qom · Living", alive:true, desc:"A prolific Marji' and exegete, author of the renowned Qur'anic commentary Tafsīr Nemūneh.", books:["Tafsīr Nemūneh","Tawḍīḥ al-Masāʾil","Al-Amthal fī Tafsīr"], site:"https://makarem.ir/main.aspx?lid=2"},
   {n:"Sayyid Sadiq al-Shirazi", ar:"ص", status:"Qom · Living", alive:true, desc:"A Marji' with a wide following, known for his works on ethics and jurisprudence.", books:["Bayān al-Fiqh","Tawḍīḥ al-Masāʾil"], site:"https://www.english.shirazi.ir/"},
@@ -572,12 +594,36 @@ document.getElementById('yr').textContent = new Date().getFullYear();
 /* ============================================================
    SEARCH
    ============================================================ */
-function norm(s){ return (s||'').toLowerCase().replace(/[ً-ٰٟ]/g,''); } // strip Arabic diacritics
+function norm(s){
+  return (s||'').toLowerCase()
+    .replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'')
+    .replace(/[أإآٱ]/g,'ا')
+    .replace(/ى/g,'ي')
+    .replace(/ؤ/g,'و')
+    .replace(/ئ/g,'ي')
+    .replace(/ة/g,'ه');
+}
 function highlight(text,terms){
   let out = text;
   terms.filter(t=>t.length>1).forEach(t=>{
     try{ out = out.replace(new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>'); }catch(e){}
   });
+  return out;
+}
+
+// Search the complete Qur'an held in the library (window.LIB_QURAN)
+function searchQuran(terms, limit){
+  if(typeof window.LIB_QURAN==='undefined' || !terms.length) return [];
+  const out=[];
+  for(const su of LIB_QURAN){
+    for(const v of su.v){
+      const hay = norm(v[1]+' '+v[2]);
+      if(terms.every(t=>hay.includes(t))){
+        out.push({ar:v[1], tr:v[2], src:"Qur'an", ref:'Sūrat '+su.nt+' · '+su.s+':'+v[0]});
+        if(out.length>=limit) return out;
+      }
+    }
+  }
   return out;
 }
 
@@ -591,18 +637,27 @@ function runSearch(){
   const nq = norm(raw);
   const terms = nq.split(/\s+/).filter(Boolean);
 
-  const hits = corpus.filter(item=>{
+  let hits = corpus.filter(item=>{
     if(filter && item.src!==filter) return false;
     if(!raw) return true;
     const hay = norm(item.ar+' '+item.tr+' '+item.tags+' '+item.src+' '+item.ref);
     return terms.every(t=> hay.includes(t));
   });
 
-  if(hits.length===0){
+  // Full Qur'an search (skipped only when filtered to a non-Qur'an source)
+  let quranHits = [];
+  if(raw && (!filter || filter==="Qur'an")){ quranHits = searchQuran(terms, 60); }
+  if(!filter){ hits = hits.filter(h=>h.src!=="Qur'an"); } // the full Qur'an covers these
+  const all = hits.concat(quranHits);
+
+  if(all.length===0){
     box.innerHTML = `<div class="no-res">No match in the built-in collection for “${raw||filter}”.<br><br>Try the <b>full libraries</b> below — your search has been prepared for them.</div>`;
     return;
   }
-  box.innerHTML = hits.map(h=>{
+  const capped = quranHits.length>=60;
+  const capNote = capped ? '+ (first 60 Quranic matches — refine to narrow)' : '';
+  const count = `<div style="text-align:center;color:var(--muted);font-size:.86rem;margin-bottom:4px">${all.length} result${all.length!==1?'s':''}${capNote} · narrations &amp; full Qur'an</div>`;
+  box.innerHTML = count + all.map(h=>{
     const badge = h.src==="Qur'an" ? 'badge quran' : 'badge book';
     return `<div class="res">
       <div class="ar arabic">${highlight(h.ar,[raw])}</div>
@@ -635,6 +690,32 @@ function updateExt(q){
   });
 }
 updateExt('');
+
+/* ---- Qur'an library browser ---- */
+(function(){
+  const sel=document.getElementById('surahPick');
+  if(sel && typeof window.LIB_QURAN!=='undefined'){
+    sel.innerHTML = LIB_QURAN.map(s=>`<option value="${s.s}">${s.s}. ${s.nt} — ${s.ne} (${s.v.length})</option>`).join('');
+  }
+})();
+function showSurah(){
+  if(typeof window.LIB_QURAN==='undefined') return;
+  const id=+document.getElementById('surahPick').value;
+  const su=LIB_QURAN.find(s=>s.s===id);
+  const view=document.getElementById('surahView');
+  if(!su){view.innerHTML='';return;}
+  const basmala=(id!==1 && id!==9)
+    ? `<div class="res" style="text-align:center;border-left-color:var(--gold)"><div class="ar arabic" style="text-align:center;font-size:1.5rem">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>` : '';
+  view.innerHTML = `<div style="text-align:center;margin-bottom:14px">
+      <div class="ar arabic" style="font-size:2rem;color:var(--green-800)">${su.na}</div>
+      <div style="color:var(--muted)">Sūrah ${su.s} · ${su.nt} — ${su.ne} · ${su.v.length} verses</div>
+    </div>` + basmala + su.v.map(v=>`
+    <div class="res">
+      <div class="ar arabic" style="font-size:1.5rem">${v[1]} <span style="color:var(--gold);font-size:1rem">﴿${v[0]}﴾</span></div>
+      <div class="tr">${v[2]}</div>
+    </div>`).join('');
+  view.scrollIntoView({behavior:'smooth'});
+}
 
 // search on Enter
 document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') runSearch(); });
