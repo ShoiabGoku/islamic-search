@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Noor al-Hidayah — نور الهداية | Shia Islamic Knowledge Portal</title>
+<meta name="description" content="A Shia Islamic portal: the Maraji' al-Taqleed and their books, the Holy Qur'an, Nahj al-Balagha, the hadith collections, daily reminders, and unified search for authentic narrations." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --green-900:#0a2e23;
+    --green-800:#0e3d2e;
+    --green-700:#12503b;
+    --green-600:#1a6b50;
+    --gold:#c9a24a;
+    --gold-light:#e7c878;
+    --gold-soft:#f3e6c2;
+    --cream:#f7f2e7;
+    --cream-2:#fbf8f0;
+    --ink:#1d2420;
+    --muted:#5d6b62;
+    --line:rgba(201,162,74,.28);
+    --shadow:0 14px 40px rgba(10,46,35,.18);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Poppins',sans-serif;
+    color:var(--ink);
+    background:var(--cream);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .arabic{font-family:'Amiri','Scheherazade New',serif;direction:rtl;line-height:2.1}
+  h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:.2px}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+
+  /* ----- decorative arabesque background ----- */
+  .pattern-bg{
+    background-color:var(--green-800);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(201,162,74,.18) 1.4px, transparent 0),
+      radial-gradient(circle at 16px 16px, rgba(201,162,74,.10) 1.4px, transparent 0);
+    background-size:32px 32px;
+  }
+
+  /* ----- top bar ----- */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,46,35,.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:12px;color:var(--cream)}
+  .brand .mark{
+    width:42px;height:42px;border-radius:50%;
+    display:grid;place-items:center;
+    background:radial-gradient(circle at 30% 25%,var(--gold-light),var(--gold) 70%);
+    color:var(--green-900);font-weight:700;box-shadow:0 0 0 4px rgba(201,162,74,.18);
+  }
+  .brand b{font-family:'Cormorant Garamond',serif;font-size:1.4rem;letter-spacing:.5px;line-height:1}
+  .brand small{display:block;color:var(--gold-light);font-size:.68rem;letter-spacing:3px;text-transform:uppercase}
+  nav.links{display:flex;gap:6px}
+  nav.links a{
+    color:var(--cream);font-size:.86rem;padding:9px 14px;border-radius:10px;opacity:.85;transition:.2s;
+  }
+  nav.links a:hover{background:rgba(201,162,74,.16);opacity:1;color:var(--gold-light)}
+  .menu-btn{display:none;background:none;border:1px solid var(--line);color:var(--gold-light);border-radius:10px;padding:8px 12px;font-size:1.1rem;cursor:pointer}
+
+  /* ----- hero ----- */
+  .hero{position:relative;color:var(--cream);padding:64px 0 54px;overflow:hidden}
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(10,46,35,.78),rgba(10,46,35,.92));
+  }
+  .hero .wrap{position:relative;z-index:2;text-align:center}
+  .bismillah{font-family:'Amiri',serif;font-size:clamp(1.8rem,4vw,2.8rem);color:var(--gold-light);margin-bottom:8px}
+  .hero h1{font-size:clamp(2.2rem,5vw,3.6rem);color:var(--cream);margin-bottom:6px}
+  .hero .sub{color:var(--gold-soft);max-width:720px;margin:0 auto 8px;font-size:1.02rem}
+  .ornament{display:flex;align-items:center;justify-content:center;gap:14px;margin:22px auto 0;color:var(--gold);max-width:340px}
+  .ornament .line{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);flex:1}
+  .ornament svg{width:26px;height:26px;flex:none}
+
+  /* ----- daily reminder card ----- */
+  .daily{margin-top:38px}
+  .daily-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .rcard{
+    background:linear-gradient(160deg,var(--cream-2),#fff);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 26px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .rcard::after{content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,74,.16),transparent 70%)}
+  .rcard .tag{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--green-600);font-weight:600;margin-bottom:14px}
+  .rcard .tag .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+  .rcard .ar{font-size:1.5rem;color:var(--green-800);margin-bottom:14px;text-align:right}
+  .rcard .tr{color:var(--ink);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:1.18rem;line-height:1.5;margin-bottom:10px}
+  .rcard .src{color:var(--muted);font-size:.82rem;font-weight:500}
+  .daily-note{text-align:center;color:var(--gold-soft);font-size:.85rem;margin-top:18px;opacity:.9}
+
+  /* ----- section shell ----- */
+  section{padding:62px 0}
+  .sec-head{text-align:center;max-width:680px;margin:0 auto 40px}
+  .sec-head .kicker{color:var(--gold);font-size:.74rem;letter-spacing:3px;text-transform:uppercase;font-weight:600}
+  .sec-head h2{font-size:clamp(1.9rem,3.6vw,2.7rem);color:var(--green-800);margin:6px 0 10px}
+  .sec-head p{color:var(--muted)}
+  .alt{background:linear-gradient(180deg,#fff,var(--cream))}
+
+  /* ----- search ----- */
+  .search-shell{max-width:920px;margin:0 auto}
+  .search-box{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:var(--shadow);flex-wrap:wrap}
+  .search-box input[type=text]{flex:1;min-width:220px;border:none;outline:none;font-size:1rem;padding:12px 14px;font-family:inherit;background:transparent}
+  .search-box select{border:1px solid var(--line);border-radius:10px;padding:0 12px;font-family:inherit;color:var(--ink);background:var(--cream-2);outline:none;cursor:pointer}
+  .btn{
+    background:linear-gradient(160deg,var(--green-700),var(--green-600));
+    color:var(--cream);border:none;border-radius:12px;padding:13px 22px;font-family:inherit;font-weight:500;
+    cursor:pointer;transition:.2s;font-size:.95rem;display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(18,80,59,.3)}
+  .btn.gold{background:linear-gradient(160deg,var(--gold),#b78f38);color:var(--green-900);font-weight:600}
+  .search-hint{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+  .chip{font-size:.78rem;background:var(--green-700);color:var(--gold-soft);padding:6px 13px;border-radius:30px;cursor:pointer;border:1px solid transparent;transition:.2s}
+  .chip:hover{background:var(--gold);color:var(--green-900)}
+  .results{margin-top:30px;display:grid;gap:16px}
+  .res{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);
+    border-radius:14px;padding:20px 22px;box-shadow:0 6px 18px rgba(10,46,35,.07);animation:fade .3s ease;
+  }
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .res .ar{font-size:1.35rem;color:var(--green-800);text-align:right;margin-bottom:12px}
+  .res .tr{font-family:'Cormorant Garamond',serif;font-size:1.12rem;color:var(--ink);margin-bottom:12px}
+  .res .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .res .badge{font-size:.7rem;letter-spacing:1px;text-transform:uppercase;background:var(--green-700);color:var(--gold-soft);padding:4px 10px;border-radius:20px;font-weight:600}
+  .res .badge.book{background:var(--gold-soft);color:var(--green-800)}
+  .res .badge.quran{background:#1a6b50;color:#fff}
+  .res mark{background:var(--gold-light);color:var(--green-900);padding:0 2px;border-radius:3px}
+  .no-res{text-align:center;color:var(--muted);padding:30px;background:#fff;border:1px dashed var(--line);border-radius:14px}
+  .ext-search{margin-top:26px;background:var(--green-800);border-radius:var(--radius);padding:26px;color:var(--cream);text-align:center}
+  .ext-search h3{color:var(--gold-light);font-size:1.4rem;margin-bottom:6px}
+  .ext-search p{color:var(--gold-soft);font-size:.9rem;margin-bottom:16px;opacity:.9}
+  .ext-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .ext-btns a{background:rgba(201,162,74,.16);border:1px solid var(--line);color:var(--gold-light);padding:10px 16px;border-radius:12px;font-size:.86rem;transition:.2s}
+  .ext-btns a:hover{background:var(--gold);color:var(--green-900)}
+
+  /* ----- maraji grid ----- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+  .marja{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:0 6px 18px rgba(10,46,35,.07);
+    transition:.25s;display:flex;flex-direction:column;
+  }
+  .marja:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--gold)}
+  .marja .top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .marja .av{
+    width:54px;height:54px;border-radius:14px;flex:none;display:grid;place-items:center;
+    background:linear-gradient(160deg,var(--green-700),var(--green-600));color:var(--gold-light);
+    font-family:'Amiri',serif;font-size:1.5rem;
+  }
+  .marja h3{font-size:1.28rem;color:var(--green-800);line-height:1.15}
+  .marja .status{font-size:.72rem;color:var(--muted);font-weight:500}
+  .marja .status.alive{color:var(--green-600)}
+  .marja .desc{font-size:.88rem;color:var(--muted);margin-bottom:14px;flex:1}
+  .marja .books{list-style:none;margin-bottom:16px}
+  .marja .books li{font-size:.84rem;padding:5px 0;border-bottom:1px dashed var(--line);display:flex;align-items:center;gap:8px}
+  .marja .books li::before{content:"۞";color:var(--gold);font-size:.8rem}
+  .marja .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .marja .actions a,.marja .actions button{font-size:.8rem;padding:8px 12px;border-radius:10px;cursor:pointer;border:1px solid var(--line);background:var(--cream-2);color:var(--green-700);transition:.2s;font-family:inherit}
+  .marja .actions a:hover,.marja .actions button:hover{background:var(--green-700);color:var(--cream)}
+
+  /* ----- core books ----- */
+  .books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+  .book{
+    background:linear-gradient(160deg,var(--green-800),var(--green-700));color:var(--cream);
+    border-radius:var(--radius);padding:24px;position:relative;overflow:hidden;border:1px solid var(--line);
+    transition:.25s;min-height:190px;display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .book:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+  .book::before{content:"";position:absolute;bottom:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,74,.18),transparent 70%)}
+  .book .ar{font-size:1.5rem;color:var(--gold-light);text-align:right;margin-bottom:6px}
+  .book h3{font-size:1.25rem;color:var(--cream)}
+  .book p{font-size:.82rem;color:var(--gold-soft);opacity:.9;margin:6px 0 14px;position:relative;z-index:2}
+  .book a{font-size:.82rem;color:var(--green-900);background:var(--gold-light);padding:8px 14px;border-radius:10px;align-self:flex-start;font-weight:600;position:relative;z-index:2;transition:.2s}
+  .book a:hover{background:var(--cream)}
+
+  /* ----- pillars / quick ----- */
+  .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px}
+  .pillar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;box-shadow:0 6px 18px rgba(10,46,35,.06)}
+  .pillar .ic{font-size:1.8rem;color:var(--gold);margin-bottom:8px}
+  .pillar h4{font-family:'Cormorant Garamond',serif;color:var(--green-800);font-size:1.15rem}
+  .pillar small{color:var(--muted);font-size:.78rem}
+
+  /* ----- footer ----- */
+  footer{background:var(--green-900);color:var(--gold-soft);padding:48px 0 26px;border-top:3px solid var(--gold)}
+  footer .cols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px;margin-bottom:30px}
+  footer h4{color:var(--gold-light);font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:12px}
+  footer p,footer a{font-size:.86rem;color:var(--gold-soft);opacity:.85;display:block;margin-bottom:6px}
+  footer a:hover{color:var(--gold-light);opacity:1}
+  .foot-bottom{border-top:1px solid var(--line);padding-top:18px;text-align:center;font-size:.8rem;opacity:.7}
+  .salawat{text-align:center;font-family:'Amiri',serif;font-size:1.4rem;color:var(--gold-light);margin-bottom:20px}
+
+  @media(max-width:820px){
+    .daily-grid{grid-template-columns:1fr}
+    nav.links{display:none}
+    .menu-btn{display:block}
+    nav.links.open{display:flex;position:absolute;top:68px;left:0;right:0;flex-direction:column;background:var(--green-900);padding:14px;border-bottom:1px solid var(--line)}
+    footer .cols{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======= NAV ======= -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <span class="mark">ن</span>
+      <span><b>Noor al-Hidayah</b><small>Light of Guidance</small></span>
+    </a>
+    <button class="menu-btn" onclick="document.getElementById('navlinks').classList.toggle('open')">☰</button>
+    <nav class="links" id="navlinks">
+      <a href="#daily">Daily Reminder</a>
+      <a href="#search">Search</a>
+      <a href="#maraji">Maraji'</a>
+      <a href="#books">Books</a>
+      <a href="#about">About</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ======= HERO ======= -->
+<div class="pattern-bg" id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+      <h1>Noor al-Hidayah</h1>
+      <p class="sub">A portal of guidance for the followers of the Ahl al-Bayt (عليهم السلام) — the Maraji' al-Taqleed and their books, the Holy Qur'an, Nahj al-Balagha, the great hadith collections, and a unified search for authentic narrations.</p>
+      <div class="ornament">
+        <span class="line"></span>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 5.6L20 8l-4.5 4 1.4 6L12 14.8 7.1 18l1.4-6L4 8l5.6-.4z"/></svg>
+        <span class="line"></span>
+      </div>
+
+      <!-- DAILY REMINDER -->
+      <div class="daily" id="daily">
+        <div class="daily-grid">
+          <div class="rcard" id="card-quran">
+            <span class="tag"><span class="dot"></span> Verse of the Day · آية اليوم</span>
+            <div class="ar" id="q-ar"></div>
+            <div class="tr" id="q-tr"></div>
+            <div class="src" id="q-src"></div>
+          </div>
+          <div class="rcard" id="card-hadith">
+            <span class="tag"><span class="dot"></span> Narration of the Day · حديث اليوم</span>
+            <div class="ar" id="h-ar"></div>
+            <div class="tr" id="h-tr"></div>
+            <div class="src" id="h-src"></div>
+          </div>
+        </div>
+        <p class="daily-note">✦ Reminders renew each day — return tomorrow for new light. Always fulfil the wajibات, follow the straight path, and hold to the teachings of the Prophet Muḥammad (ص) and Imam al-Husayn (ع). ✦</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======= SEARCH ======= -->
+<section id="search">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Authentic Narrations</span>
+      <h2>Search the Words of Guidance</h2>
+      <p>Search in English or Arabic across the Qur'an, Nahj al-Balagha, the Four Books and the teachings of the Imams. Filter by source, then extend your search into the great digital libraries below.</p>
+    </div>
+
+    <div class="search-shell">
+      <div class="search-box">
+        <input type="text" id="q" placeholder="Search a topic, an Arabic phrase, or a word…  e.g. patience / صبر / justice" />
+        <select id="srcFilter" title="Filter by source">
+          <option value="">All sources</option>
+          <option value="Qur'an">Qur'an</option>
+          <option value="Nahj al-Balagha">Nahj al-Balagha</option>
+          <option value="Al-Kafi">Al-Kafi</option>
+          <option value="Man la yahduruhu al-Faqih">Man la yahduruhu al-Faqih</option>
+          <option value="Bihar al-Anwar">Bihar al-Anwar</option>
+          <option value="Al-Sahifa al-Sajjadiyya">Sahifa Sajjadiyya</option>
+          <option value="Uyun Akhbar al-Rida">Uyun Akhbar al-Rida</option>
+        </select>
+        <button class="btn gold" onclick="runSearch()">⌕ Search</button>
+      </div>
+      <div class="search-hint">
+        <span class="chip" onclick="quick('صبر')">صبر · Patience</span>
+        <span class="chip" onclick="quick('justice')">Justice · عدل</span>
+        <span class="chip" onclick="quick('knowledge')">Knowledge · علم</span>
+        <span class="chip" onclick="quick('Husayn')">Imam Husayn</span>
+        <span class="chip" onclick="quick('prayer')">Prayer · صلاة</span>
+        <span class="chip" onclick="quick('parents')">Parents · والدين</span>
+        <span class="chip" onclick="quick('truth')">Truth · حق</span>
+      </div>
+
+      <div class="results" id="results"></div>
+
+      <!-- federated external search -->
+      <div class="ext-search">
+        <h3>Search the Full Libraries</h3>
+        <p>Type a word or Arabic phrase above, then open it directly in the major authenticated Shia digital libraries:</p>
+        <div class="ext-btns" id="extBtns">
+          <a href="#" data-base="quran">📖 Search the Qur'an (Tanzil)</a>
+          <a href="#" data-base="thaqalayn">📚 Hadith Library (Thaqalayn.net)</a>
+          <a href="#" data-base="alislam">🕌 Al-Islam.org Library</a>
+          <a href="#" data-base="nahj">⚔ Nahj al-Balagha</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= MARAJI ======= -->
+<section class="alt" id="maraji">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Marji' al-Taqleed · مراجع التقليد</span>
+      <h2>The Grand Sources of Emulation</h2>
+      <p>The senior jurists whose verdicts (fatāwā) guide the practice of the believers. Browse each Marji', their principal works, and search within their rulings.</p>
+    </div>
+    <div class="grid" id="marajiGrid"></div>
+  </div>
+</section>
+
+<!-- ======= CORE BOOKS ======= -->
+<section id="books">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">The Sacred Library · المكتبة</span>
+      <h2>The Foundational Books</h2>
+      <p>The Holy Qur'an and the great Shia collections — the foundation of belief, law and spirituality.</p>
+    </div>
+    <div class="books-grid" id="booksGrid"></div>
+  </div>
+</section>
+
+<!-- ======= PILLARS / FURU ======= -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Practice · الفروع</span>
+      <h2>The Pillars of Action</h2>
+      <p>Establish the wajibāt (obligations) and seek the pleasure of Allah.</p>
+    </div>
+    <div class="pillars">
+      <div class="pillar"><div class="ic">🕌</div><h4>Ṣalāh</h4><small>The daily prayers</small></div>
+      <div class="pillar"><div class="ic">🌙</div><h4>Ṣawm</h4><small>Fasting Ramaḍān</small></div>
+      <div class="pillar"><div class="ic">💰</div><h4>Khums</h4><small>The one-fifth due</small></div>
+      <div class="pillar"><div class="ic">🤲</div><h4>Zakāh</h4><small>Purifying charity</small></div>
+      <div class="pillar"><div class="ic">🕋</div><h4>Ḥajj</h4><small>Pilgrimage</small></div>
+      <div class="pillar"><div class="ic">⚔️</div><h4>Jihād</h4><small>Striving in truth</small></div>
+      <div class="pillar"><div class="ic">✅</div><h4>Amr bil Maʿrūf</h4><small>Enjoining good</small></div>
+      <div class="pillar"><div class="ic">🚫</div><h4>Nahy ʿan al-Munkar</h4><small>Forbidding evil</small></div>
+      <div class="pillar"><div class="ic">🤍</div><h4>Tawallā</h4><small>Love of Ahl al-Bayt</small></div>
+      <div class="pillar"><div class="ic">🛡️</div><h4>Tabarrā</h4><small>Disavowal of injustice</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= ABOUT ======= -->
+<section id="about">
+  <div class="wrap" style="max-width:820px">
+    <div class="sec-head">
+      <span class="kicker">About this Portal</span>
+      <h2>Knowledge in the Service of Guidance</h2>
+    </div>
+    <p style="color:var(--muted);text-align:center;margin-bottom:18px">
+      Noor al-Hidayah gathers, in one respectful place, the names of the Maraji' al-Taqleed, the foundational books of the school of the Ahl al-Bayt (عليهم السلام), and a search tool for authentic narrations. The built-in collection contains a curated set of well-known verses and ḥadīth; for the complete texts, the portal links directly into the established, scholarly digital libraries.
+    </p>
+    <p style="color:var(--muted);text-align:center;font-size:.9rem">
+      <strong>A note on authenticity:</strong> Always confirm rulings (aḥkām) with the risāla of your own Marji', and verify narrations against their original chains. May Allah accept this effort and count it among the deeds done for His sake.
+    </p>
+  </div>
+</section>
+
+<!-- ======= FOOTER ======= -->
+<footer>
+  <div class="wrap">
+    <div class="salawat">اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّد</div>
+    <div class="cols">
+      <div>
+        <h4>Noor al-Hidayah · نور الهداية</h4>
+        <p>A Shia Islamic knowledge portal dedicated to the followers of the Ahl al-Bayt (عليهم السلام). Built to make the search for authentic guidance simple, beautiful, and accessible.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <a href="#daily">Daily Reminder</a>
+        <a href="#search">Search Narrations</a>
+        <a href="#maraji">The Maraji'</a>
+        <a href="#books">The Books</a>
+      </div>
+      <div>
+        <h4>Libraries</h4>
+        <a href="https://www.al-islam.org" target="_blank" rel="noopener">Al-Islam.org</a>
+        <a href="https://thaqalayn.net" target="_blank" rel="noopener">Thaqalayn.net</a>
+        <a href="https://tanzil.net" target="_blank" rel="noopener">Tanzil (Qur'an)</a>
+        <a href="https://www.holyquran.net" target="_blank" rel="noopener">Holy Qur'an</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      Made in the love of the Ahl al-Bayt (ع). Verify all rulings with your own Marji'. © <span id="yr"></span> Noor al-Hidayah.
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+
+// --- Daily reminders (rotate by day-of-year) ---
+const dailyQuran = [
+  {ar:"إِنَّ مَعَ الْعُسْرِ يُسْرًا", tr:"Indeed, with hardship comes ease.", src:"Sūrat al-Sharḥ 94:6"},
+  {ar:"وَأَنْ لَيْسَ لِلْإِنْسَانِ إِلَّا مَا سَعَىٰ", tr:"And that man shall have nothing but what he strives for.", src:"Sūrat al-Najm 53:39"},
+  {ar:"إِنَّ اللَّهَ مَعَ الصَّابِرِينَ", tr:"Surely Allah is with the patient ones.", src:"Sūrat al-Baqarah 2:153"},
+  {ar:"فَاذْكُرُونِي أَذْكُرْكُمْ", tr:"So remember Me; I will remember you.", src:"Sūrat al-Baqarah 2:152"},
+  {ar:"وَقُل رَّبِّ زِدْنِي عِلْمًا", tr:"And say: My Lord, increase me in knowledge.", src:"Sūrat Ṭā Hā 20:114"},
+  {ar:"إِنَّمَا يُرِيدُ اللَّهُ لِيُذْهِبَ عَنكُمُ الرِّجْسَ أَهْلَ الْبَيْتِ وَيُطَهِّرَكُمْ تَطْهِيرًا", tr:"Allah only desires to remove all impurity from you, O People of the House, and to purify you completely.", src:"Sūrat al-Aḥzāb 33:33 (Verse of Purification)"},
+  {ar:"وَاعْتَصِمُوا بِحَبْلِ اللَّهِ جَمِيعًا وَلَا تَفَرَّقُوا", tr:"And hold fast, all together, to the rope of Allah, and do not be divided.", src:"Sūrat Āl ʿImrān 3:103"},
+  {ar:"إِنَّ اللَّهَ يَأْمُرُ بِالْعَدْلِ وَالْإِحْسَانِ", tr:"Indeed, Allah commands justice and excellence.", src:"Sūrat al-Naḥl 16:90"},
+  {ar:"وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا", tr:"And whoever is mindful of Allah — He will make a way out for him.", src:"Sūrat al-Ṭalāq 65:2"},
+  {ar:"وَبِالْوَالِدَيْنِ إِحْسَانًا", tr:"And to parents, good treatment.", src:"Sūrat al-Isrāʾ 17:23"},
+  {ar:"أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ", tr:"Surely in the remembrance of Allah do hearts find rest.", src:"Sūrat al-Raʿd 13:28"},
+  {ar:"وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ", tr:"And cooperate in righteousness and piety.", src:"Sūrat al-Māʾidah 5:2"},
+];
+
+const dailyHadith = [
+  {ar:"مَنْ مَاتَ وَلَمْ يَعْرِفْ إِمَامَ زَمَانِهِ مَاتَ مِيتَةً جَاهِلِيَّةً", tr:"Whoever dies without knowing the Imam of his time dies the death of ignorance.", src:"Prophet Muḥammad (ص) — Al-Kafi, vol.1"},
+  {ar:"إِنِّي تَارِكٌ فِيكُمُ الثَّقَلَيْنِ كِتَابَ اللَّهِ وَعِتْرَتِي أَهْلَ بَيْتِي", tr:"I leave among you the two weighty things: the Book of Allah and my progeny, my Ahl al-Bayt.", src:"Prophet Muḥammad (ص) — Ḥadīth al-Thaqalayn"},
+  {ar:"هَيْهَاتَ مِنَّا الذِّلَّةُ", tr:"Far be it from us to accept humiliation!", src:"Imam al-Ḥusayn (ع) — ʿĀshūrāʾ"},
+  {ar:"إِنْ لَمْ يَكُنْ لَكُمْ دِينٌ وَكُنْتُمْ لَا تَخَافُونَ الْمَعَادَ فَكُونُوا أَحْرَارًا فِي دُنْيَاكُمْ", tr:"If you have no religion and do not fear the Day of Return, then at least be free in your worldly life.", src:"Imam al-Ḥusayn (ع) — Karbalāʾ"},
+  {ar:"طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَىٰ كُلِّ مُسْلِمٍ", tr:"Seeking knowledge is an obligation upon every Muslim.", src:"Prophet Muḥammad (ص) — Al-Kafi"},
+  {ar:"الْعَالِمُ بِزَمَانِهِ لَا تَهْجُمُ عَلَيْهِ اللَّوَابِسُ", tr:"One who is aware of his time will not be assaulted by confusions.", src:"Imam al-Ṣādiq (ع) — Al-Kafi"},
+  {ar:"مَنْ أَصْبَحَ لَا يَهْتَمُّ بِأُمُورِ الْمُسْلِمِينَ فَلَيْسَ بِمُسْلِمٍ", tr:"Whoever begins his day without concern for the affairs of the Muslims is not a Muslim.", src:"Prophet Muḥammad (ص) — Al-Kafi"},
+  {ar:"الصَّبْرُ مِنَ الْإِيمَانِ بِمَنْزِلَةِ الرَّأْسِ مِنَ الْجَسَدِ", tr:"Patience is to faith as the head is to the body.", src:"Imam ʿAlī (ع) — Nahj al-Balagha"},
+  {ar:"أَفْضَلُ النَّاسِ مَنْ عَشِقَ الْعِبَادَةَ فَعَانَقَهَا وَأَحَبَّهَا بِقَلْبِهِ", tr:"The best of people is the one who loves worship, embraces it, and loves it with his heart.", src:"Imam ʿAlī (ع) — Nahj al-Balagha"},
+  {ar:"النَّاسُ صِنْفَانِ إِمَّا أَخٌ لَكَ فِي الدِّينِ أَوْ نَظِيرٌ لَكَ فِي الْخَلْقِ", tr:"People are of two kinds: either your brother in faith or your equal in creation.", src:"Imam ʿAlī (ع) — Letter to Mālik al-Ashtar"},
+  {ar:"خَيْرُكُمْ خَيْرُكُمْ لِأَهْلِهِ", tr:"The best of you is the one who is best to his family.", src:"Prophet Muḥammad (ص)"},
+  {ar:"رِضَا اللَّهِ فِي رِضَا الْوَالِدَيْنِ", tr:"The pleasure of Allah lies in the pleasure of one's parents.", src:"Imam al-Ṣādiq (ع)"},
+];
+
+// --- Searchable narrations dataset ---
+const corpus = [
+  // Qur'an
+  {ar:"وَاصْبِرْ وَمَا صَبْرُكَ إِلَّا بِاللَّهِ", tr:"Be patient — and your patience is only by Allah.", src:"Qur'an", ref:"Sūrat al-Naḥl 16:127", tags:"patience sabr صبر perseverance"},
+  {ar:"يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ", tr:"O you who believe, seek help through patience and prayer.", src:"Qur'an", ref:"Sūrat al-Baqarah 2:153", tags:"patience prayer sabr salah صبر صلاة"},
+  {ar:"إِنَّ اللَّهَ يَأْمُرُ بِالْعَدْلِ وَالْإِحْسَانِ وَإِيتَاءِ ذِي الْقُرْبَىٰ", tr:"Indeed Allah commands justice, excellence, and giving to kinsfolk.", src:"Qur'an", ref:"Sūrat al-Naḥl 16:90", tags:"justice adl عدل righteousness"},
+  {ar:"وَقَضَىٰ رَبُّكَ أَلَّا تَعْبُدُوا إِلَّا إِيَّاهُ وَبِالْوَالِدَيْنِ إِحْسَانًا", tr:"Your Lord has decreed that you worship none but Him, and be good to parents.", src:"Qur'an", ref:"Sūrat al-Isrāʾ 17:23", tags:"parents walidayn والدين family kindness"},
+  {ar:"إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا", tr:"Indeed prayer is decreed upon the believers at fixed times.", src:"Qur'an", ref:"Sūrat al-Nisāʾ 4:103", tags:"prayer salah صلاة wajib obligation"},
+  {ar:"وَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ", tr:"And establish prayer and give the purifying alms.", src:"Qur'an", ref:"Sūrat al-Baqarah 2:43", tags:"prayer zakah salah صلاة زكاة charity wajib"},
+  {ar:"هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ", tr:"Are those who know equal to those who do not know?", src:"Qur'an", ref:"Sūrat al-Zumar 39:9", tags:"knowledge ilm علم learning"},
+  {ar:"إِنَّمَا وَلِيُّكُمُ اللَّهُ وَرَسُولُهُ وَالَّذِينَ آمَنُوا الَّذِينَ يُقِيمُونَ الصَّلَاةَ وَيُؤْتُونَ الزَّكَاةَ وَهُمْ رَاكِعُونَ", tr:"Your guardian is only Allah, His Messenger, and the believers who establish prayer and give alms while bowing.", src:"Qur'an", ref:"Sūrat al-Māʾidah 5:55 (Verse of Wilāyah)", tags:"wilayah ali guardianship imamate ولاية"},
+
+  // Nahj al-Balagha
+  {ar:"النَّاسُ نِيَامٌ فَإِذَا مَاتُوا انْتَبَهُوا", tr:"People are asleep; when they die, they awaken.", src:"Nahj al-Balagha", ref:"Imam ʿAlī (ع), Ḥikam", tags:"death awareness dunya world soul"},
+  {ar:"قِيمَةُ كُلِّ امْرِئٍ مَا يُحْسِنُهُ", tr:"The worth of every person is in what they do well.", src:"Nahj al-Balagha", ref:"Imam ʿAlī (ع), Saying 81", tags:"value skill excellence character worth"},
+  {ar:"الْبُخْلُ عَارٌ وَالْجُبْنُ مَنْقَصَةٌ", tr:"Miserliness is a disgrace, and cowardice is a defect.", src:"Nahj al-Balagha", ref:"Imam ʿAlī (ع), Saying 3", tags:"miserliness courage character generosity"},
+  {ar:"لَا تَكُنْ عَبْدَ غَيْرِكَ وَقَدْ جَعَلَكَ اللَّهُ حُرًّا", tr:"Do not be the slave of another, for Allah has made you free.", src:"Nahj al-Balagha", ref:"Imam ʿAlī (ع), Letter 31 to Imam al-Ḥasan", tags:"freedom dignity self husayn letter"},
+  {ar:"مَنْ نَصَبَ نَفْسَهُ لِلنَّاسِ إِمَامًا فَلْيَبْدَأْ بِتَعْلِيمِ نَفْسِهِ قَبْلَ تَعْلِيمِ غَيْرِهِ", tr:"Whoever sets himself up as a leader of people must begin by teaching himself before teaching others.", src:"Nahj al-Balagha", ref:"Imam ʿAlī (ع), Saying 73", tags:"leadership knowledge teaching self ilm"},
+  {ar:"الصَّبْرُ مِنَ الْإِيمَانِ بِمَنْزِلَةِ الرَّأْسِ مِنَ الْجَسَدِ", tr:"Patience is to faith what the head is to the body.", src:"Nahj al-Balagha", ref:"Imam ʿAlī (ع), Saying 82", tags:"patience sabr faith iman صبر"},
+
+  // Al-Kafi
+  {ar:"طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَى كُلِّ مُسْلِمٍ", tr:"Seeking knowledge is an obligation upon every Muslim.", src:"Al-Kafi", ref:"Imam al-Bāqir (ع), Kitāb Faḍl al-ʿIlm", tags:"knowledge ilm علم learning obligation wajib"},
+  {ar:"مَنْ تَعَلَّمَ الْعِلْمَ وَعَمِلَ بِهِ وَعَلَّمَ لِلَّهِ دُعِيَ فِي مَلَكُوتِ السَّمَاوَاتِ عَظِيمًا", tr:"Whoever learns knowledge, acts upon it, and teaches it for Allah's sake is called great in the kingdom of the heavens.", src:"Al-Kafi", ref:"Imam al-Ṣādiq (ع)", tags:"knowledge teaching action ilm sincerity"},
+  {ar:"كُونُوا دُعَاةً لِلنَّاسِ بِغَيْرِ أَلْسِنَتِكُمْ", tr:"Be callers to the people by other than your tongues (through your deeds).", src:"Al-Kafi", ref:"Imam al-Ṣādiq (ع)", tags:"dawah deeds character example conduct"},
+  {ar:"الْعِبَادَةُ ثَلَاثَةٌ قَوْمٌ عَبَدُوا اللَّهَ خَوْفًا فَتِلْكَ عِبَادَةُ الْعَبِيدِ", tr:"Worship is of three kinds: some worship Allah out of fear — that is the worship of slaves…", src:"Al-Kafi", ref:"Imam ʿAlī (ع) / Imam al-Ṣādiq (ع)", tags:"worship ibadah love fear sincerity"},
+
+  // Man la yahduruhu al-Faqih
+  {ar:"الصَّلَاةُ عَمُودُ الدِّينِ", tr:"Prayer is the pillar of religion.", src:"Man la yahduruhu al-Faqih", ref:"Prophet Muḥammad (ص)", tags:"prayer salah pillar deen صلاة wajib"},
+  {ar:"رَأْسُ الْعَقْلِ بَعْدَ الْإِيمَانِ بِاللَّهِ التَّوَدُّدُ إِلَى النَّاسِ", tr:"The height of wisdom, after faith in Allah, is showing affection to people.", src:"Man la yahduruhu al-Faqih", ref:"Imam al-Ṣādiq (ع)", tags:"wisdom kindness people love character"},
+
+  // Bihar al-Anwar
+  {ar:"أَنَا مَدِينَةُ الْعِلْمِ وَعَلِيٌّ بَابُهَا", tr:"I am the city of knowledge and ʿAlī is its gate.", src:"Bihar al-Anwar", ref:"Prophet Muḥammad (ص)", tags:"knowledge ali ilm city gate imamate"},
+  {ar:"حُسَيْنٌ مِنِّي وَأَنَا مِنْ حُسَيْنٍ", tr:"Ḥusayn is from me, and I am from Ḥusayn.", src:"Bihar al-Anwar", ref:"Prophet Muḥammad (ص)", tags:"husayn karbala love prophet ahlulbayt"},
+  {ar:"إِنَّ لِقَتْلِ الْحُسَيْنِ حَرَارَةً فِي قُلُوبِ الْمُؤْمِنِينَ لَا تَبْرُدُ أَبَدًا", tr:"Indeed, the martyrdom of al-Ḥusayn has left a heat in the hearts of the believers that will never cool.", src:"Bihar al-Anwar", ref:"Imam al-Ṣādiq (ع)", tags:"husayn karbala grief azadari ashura mourning"},
+
+  // Sahifa Sajjadiyya
+  {ar:"اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِهِ وَاجْعَلْنِي مِنْ أَهْلِ التَّقْوَى", tr:"O Allah, bless Muḥammad and his family, and make me of the people of piety.", src:"Al-Sahifa al-Sajjadiyya", ref:"Imam al-Sajjād (ع), Supplication", tags:"dua supplication taqwa piety sajjad prayer"},
+  {ar:"وَفِّقْنِي لِمَا تُحِبُّ وَتَرْضَى", tr:"Grant me success in what You love and what pleases You.", src:"Al-Sahifa al-Sajjadiyya", ref:"Imam al-Sajjād (ع)", tags:"dua supplication success guidance pleasure"},
+
+  // Uyun Akhbar al-Rida
+  {ar:"صِلَةُ الْأَرْحَامِ تُحَسِّنُ الْخُلُقَ وَتُسَمِّحُ الْكَفَّ وَتُطَيِّبُ النَّفْسَ", tr:"Maintaining family ties improves one's character, makes the hand generous, and purifies the soul.", src:"Uyun Akhbar al-Rida", ref:"Imam al-Riḍā (ع)", tags:"family ties silat rahm kinship character"},
+  {ar:"الْإِيمَانُ أَرْبَعَةُ أَرْكَانٍ التَّوَكُّلُ عَلَى اللَّهِ وَالرِّضَا بِقَضَاءِ اللَّهِ", tr:"Faith has four pillars: trust in Allah, contentment with Allah's decree…", src:"Uyun Akhbar al-Rida", ref:"Imam al-Riḍā (ع)", tags:"faith iman trust tawakkul contentment rida"},
+];
+
+// --- Maraji' al-Taqleed ---
+const maraji = [
+  {n:"Sayyid Ali al-Sistani", ar:"س", status:"Najaf · Living", alive:true, desc:"The most widely followed Marji' today, based in the holy city of Najaf, known for his measured jurisprudence.", books:["Minhāj al-Ṣāliḥīn","Tawḍīḥ al-Masāʾil","Al-Masāʾil al-Muntakhaba","Islamic Laws (English)"], site:"https://www.sistani.org/english/"},
+  {n:"Sayyid Ali Khamenei", ar:"خ", status:"Mashhad/Qom · Living", alive:true, desc:"Supreme Leader of Iran and a Marji' followed by many, with extensive rulings on contemporary issues.", books:["Ajwibat al-Istiftāʾāt","Risāla-yi Ājwiba","Practical Laws of Islam"], site:"https://www.leader.ir/en"},
+  {n:"Sayyid Wahid Khorasani", ar:"و", status:"Qom · Living", alive:true, desc:"A senior teacher of the Qom seminary, respected for his depth in usul and theology.", books:["Minhāj al-Ṣāliḥīn","Tawḍīḥ al-Masāʾil"], site:"https://wahidkhorasani.com/"},
+  {n:"Shaykh Makarem Shirazi", ar:"م", status:"Qom · Living", alive:true, desc:"A prolific Marji' and exegete, author of the renowned Qur'anic commentary Tafsīr Nemūneh.", books:["Tafsīr Nemūneh","Tawḍīḥ al-Masāʾil","Al-Amthal fī Tafsīr"], site:"https://makarem.ir/main.aspx?lid=2"},
+  {n:"Sayyid Sadiq al-Shirazi", ar:"ص", status:"Qom · Living", alive:true, desc:"A Marji' with a wide following, known for his works on ethics and jurisprudence.", books:["Bayān al-Fiqh","Tawḍīḥ al-Masāʾil"], site:"https://www.english.shirazi.ir/"},
+  {n:"Shaykh Bashir al-Najafi", ar:"ب", status:"Najaf · Living", alive:true, desc:"One of the four grand Maraji' of the Najaf seminary (Ḥawza).", books:["Minhāj al-Ṣāliḥīn","Tawḍīḥ al-Masāʾil"], site:"https://alnajafy.com/en"},
+  {n:"Sayyid Abu al-Qasim al-Khoei", ar:"ق", status:"Najaf · Late (d.1992)", alive:false, desc:"One of the greatest jurists of the 20th century; teacher of many current Maraji'.", books:["Minhāj al-Ṣāliḥīn","Al-Bayān fī Tafsīr al-Qurʾān","Muʿjam Rijāl al-Ḥadīth"], site:"https://www.al-khoei.us/"},
+  {n:"Imam Ruhollah al-Khomeini", ar:"خ", status:"Qom · Late (d.1989)", alive:false, desc:"Founder of the Islamic Republic and a Marji' of immense influence in fiqh and irfan.", books:["Taḥrīr al-Wasīla","Tawḍīḥ al-Masāʾil","Forty Hadith"], site:"https://www.imam-khomeini.ir/en"},
+];
+
+// --- Core books ---
+const coreBooks = [
+  {ar:"القرآن الكريم", n:"The Holy Qur'an", d:"The eternal word of Allah, revealed to the Prophet Muḥammad (ص).", url:"https://tanzil.net/"},
+  {ar:"نهج البلاغة", n:"Nahj al-Balagha", d:"Sermons, letters & sayings of Imam ʿAlī (ع), compiled by al-Sharīf al-Raḍī.", url:"https://www.al-islam.org/nahjul-balagha-part-1-sermons"},
+  {ar:"الصحيفة السجادية", n:"Al-Sahifa al-Sajjadiyya", d:"The 'Psalms of Islam' — supplications of Imam al-Sajjād (ع).", url:"https://www.al-islam.org/sahifa-al-kamilah-al-sajjadiyya"},
+  {ar:"الكافي", n:"Al-Kafi", d:"The foremost of the Four Books, by Shaykh al-Kulaynī.", url:"https://thaqalayn.net/book/1"},
+  {ar:"من لا يحضره الفقيه", n:"Man la yahduruhu al-Faqih", d:"Of the Four Books, by Shaykh al-Ṣadūq.", url:"https://thaqalayn.net/"},
+  {ar:"تهذيب الأحكام", n:"Tahdhib al-Ahkam", d:"Of the Four Books, by Shaykh al-Ṭūsī.", url:"https://thaqalayn.net/"},
+  {ar:"الاستبصار", n:"Al-Istibsar", d:"Of the Four Books, by Shaykh al-Ṭūsī.", url:"https://thaqalayn.net/"},
+  {ar:"بحار الأنوار", n:"Bihar al-Anwar", d:"The vast hadith encyclopaedia of ʿAllāma al-Majlisī.", url:"https://www.al-islam.org/"},
+  {ar:"مفاتيح الجنان", n:"Mafatih al-Jinan", d:"The beloved book of supplications & ziyārāt by Shaykh ʿAbbās al-Qummī.", url:"https://www.al-islam.org/"},
+];
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function dayIndex(len){
+  const now = new Date();
+  const start = new Date(now.getFullYear(),0,0);
+  const diff = now - start;
+  const day = Math.floor(diff / 86400000);
+  return day % len;
+}
+
+// daily
+(function(){
+  const q = dailyQuran[dayIndex(dailyQuran.length)];
+  document.getElementById('q-ar').textContent = q.ar;
+  document.getElementById('q-tr').textContent = '“'+q.tr+'”';
+  document.getElementById('q-src').textContent = '— '+q.src;
+  const h = dailyHadith[dayIndex(dailyHadith.length+ ((new Date()).getFullYear()%3))]; // slight offset so the two don't always pair the same
+  const hi = dailyHadith[dayIndex(dailyHadith.length)];
+  document.getElementById('h-ar').textContent = hi.ar;
+  document.getElementById('h-tr').textContent = '“'+hi.tr+'”';
+  document.getElementById('h-src').textContent = '— '+hi.src;
+})();
+
+// maraji
+document.getElementById('marajiGrid').innerHTML = maraji.map(m=>`
+  <div class="marja">
+    <div class="top">
+      <div class="av">${m.ar}</div>
+      <div>
+        <h3>${m.n}</h3>
+        <div class="status ${m.alive?'alive':''}">${m.status}</div>
+      </div>
+    </div>
+    <p class="desc">${m.desc}</p>
+    <ul class="books">${m.books.map(b=>`<li>${b}</li>`).join('')}</ul>
+    <div class="actions">
+      <a href="${m.site}" target="_blank" rel="noopener">Official Site ↗</a>
+      <button onclick="searchMarja('${m.n.replace(/'/g,"\\'")}')">⌕ Search Rulings</button>
+    </div>
+  </div>`).join('');
+
+// books
+document.getElementById('booksGrid').innerHTML = coreBooks.map(b=>`
+  <div class="book">
+    <div>
+      <div class="ar">${b.ar}</div>
+      <h3>${b.n}</h3>
+      <p>${b.d}</p>
+    </div>
+    <a href="${b.url}" target="_blank" rel="noopener">Read / Search ↗</a>
+  </div>`).join('');
+
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+function norm(s){ return (s||'').toLowerCase().replace(/[ً-ٰٟ]/g,''); } // strip Arabic diacritics
+function highlight(text,terms){
+  let out = text;
+  terms.filter(t=>t.length>1).forEach(t=>{
+    try{ out = out.replace(new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>'); }catch(e){}
+  });
+  return out;
+}
+
+function runSearch(){
+  const raw = document.getElementById('q').value.trim();
+  const filter = document.getElementById('srcFilter').value;
+  const box = document.getElementById('results');
+  updateExt(raw);
+
+  if(!raw && !filter){ box.innerHTML=''; return; }
+  const nq = norm(raw);
+  const terms = nq.split(/\s+/).filter(Boolean);
+
+  const hits = corpus.filter(item=>{
+    if(filter && item.src!==filter) return false;
+    if(!raw) return true;
+    const hay = norm(item.ar+' '+item.tr+' '+item.tags+' '+item.src+' '+item.ref);
+    return terms.every(t=> hay.includes(t));
+  });
+
+  if(hits.length===0){
+    box.innerHTML = `<div class="no-res">No match in the built-in collection for “${raw||filter}”.<br><br>Try the <b>full libraries</b> below — your search has been prepared for them.</div>`;
+    return;
+  }
+  box.innerHTML = hits.map(h=>{
+    const badge = h.src==="Qur'an" ? 'badge quran' : 'badge book';
+    return `<div class="res">
+      <div class="ar arabic">${highlight(h.ar,[raw])}</div>
+      <div class="tr">“${highlight(h.tr,terms)}”</div>
+      <div class="meta">
+        <span class="${badge}">${h.src}</span>
+        <span style="color:var(--muted);font-size:.85rem">${h.ref}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function quick(t){ document.getElementById('q').value=t; runSearch(); document.getElementById('search').scrollIntoView({behavior:'smooth'}); }
+function searchMarja(name){
+  const url = 'https://www.google.com/search?q='+encodeURIComponent('"'+name+'" fatwa ruling masail '+ (document.getElementById('q').value||''));
+  window.open(url,'_blank');
+}
+
+// federated external search links
+function updateExt(q){
+  const enc = encodeURIComponent(q||'');
+  const map = {
+    quran:    'https://tanzil.net/#search/quran/'+enc,
+    thaqalayn:'https://thaqalayn.net/search?q='+enc,
+    alislam:  'https://www.al-islam.org/search?query='+enc,
+    nahj:     'https://www.google.com/search?q='+encodeURIComponent('Nahj al-Balagha '+(q||''))
+  };
+  document.querySelectorAll('#extBtns a').forEach(a=>{
+    a.href = map[a.dataset.base];
+  });
+}
+updateExt('');
+
+// search on Enter
+document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') runSearch(); });
+document.getElementById('srcFilter').addEventListener('change',runSearch);
+</script>
+</body>
+</html>
