@@ -561,7 +561,14 @@
     <div class="sec-head">
       <span class="kicker">Marji' al-Taqleed · مراجع التقليد</span>
       <h2>The Grand Sources of Emulation</h2>
-      <p>The senior jurists whose verdicts (fatāwā) guide the practice of the believers. Browse each Marji', their principal works, and search within their rulings.</p>
+      <p>The senior jurists whose verdicts (fatāwā) guide the practice of the believers. Search a Marjaʿ or one of their books, then open it in their official library or rulings (istiftāʾ) database.</p>
+    </div>
+    <div class="search-shell" style="margin-bottom:28px">
+      <div class="search-box">
+        <input type="text" id="marjaQ" placeholder="Search a Marjaʿ or a book…  e.g. Sistani / Minhaj / Tawdih al-Masail" />
+        <button class="btn gold" onclick="renderMaraji(document.getElementById('marjaQ').value)">⌕ Filter</button>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-size:.82rem;margin-top:10px">Tip: click any book title to open it on that Marjaʿ's official website.</p>
     </div>
     <div class="grid" id="marajiGrid"></div>
   </div>
@@ -786,9 +793,20 @@ function dayIndex(len){
   document.getElementById('h-src').textContent = '— '+hi.src;
 })();
 
-// maraji
-document.getElementById('marajiGrid').innerHTML = maraji.map(m=>`
-  <div class="marja">
+// maraji (filterable)
+function marjaDomain(m){ try{ return new URL(m.site).hostname.replace(/^www\./,''); }catch(e){ return ''; } }
+function normLat(s){ return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[ʾʿʼ'`]/g,'').toLowerCase(); }
+function renderMaraji(q){
+  q=normLat((q||'').trim());
+  const list = maraji.filter(m=> !q
+    || normLat(m.n).includes(q)
+    || normLat(m.books.join(' • ')).includes(q)
+    || normLat(m.status+' '+m.desc).includes(q));
+  const grid=document.getElementById('marajiGrid');
+  if(!list.length){ grid.innerHTML='<div class="no-res">No Marjaʿ or book matched “'+q+'”.</div>'; return; }
+  grid.innerHTML = list.map(m=>{
+    const i=maraji.indexOf(m);
+    return `<div class="marja">
     <div class="top">
       <div class="av">${m.ar}</div>
       <div>
@@ -797,12 +815,27 @@ document.getElementById('marajiGrid').innerHTML = maraji.map(m=>`
       </div>
     </div>
     <p class="desc">${m.desc}</p>
-    <ul class="books">${m.books.map(b=>`<li>${b}</li>`).join('')}</ul>
+    <ul class="books">${m.books.map((b,bi)=>`<li><a href="#" onclick="marjaBook(${i},${bi});return false;" style="color:inherit">${b} <span style="color:var(--gold);font-size:.8rem">⌕</span></a></li>`).join('')}</ul>
     <div class="actions">
-      <a href="${m.site}" target="_blank" rel="noopener">Official Site ↗</a>
-      <button onclick="searchMarja('${m.n.replace(/'/g,"\\'")}')">⌕ Search Rulings</button>
+      <a href="${m.site}" target="_blank" rel="noopener">📚 Official Library ↗</a>
+      <button onclick="marjaRulings(${i})">⌕ Search Rulings</button>
     </div>
-  </div>`).join('');
+  </div>`;
+  }).join('');
+}
+function marjaBook(i,bi){
+  const m=maraji[i], book=m.books[bi], d=marjaDomain(m);
+  const q = d ? ('site:'+d+' '+book) : (book+' '+m.n);
+  window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
+}
+function marjaRulings(i){
+  const m=maraji[i], d=marjaDomain(m);
+  const extra=(document.getElementById('marjaQ')?.value||'').trim();
+  const q = (d ? 'site:'+d+' ' : '"'+m.n+'" ') + (extra || 'masail ruling fatwa istifta');
+  window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
+}
+renderMaraji('');
+document.getElementById('marjaQ').addEventListener('input',e=>renderMaraji(e.target.value));
 
 // books
 document.getElementById('booksGrid').innerHTML = coreBooks.map(b=>`
