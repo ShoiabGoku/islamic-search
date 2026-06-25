@@ -455,11 +455,13 @@
           <option value="">All sources</option>
           <option value="Qur'an">Qur'an</option>
           <option value="Nahj al-Balagha">Nahj al-Balagha</option>
-          <option value="Al-Kafi">Al-Kafi</option>
-          <option value="Man la yahduruhu al-Faqih">Man la yahduruhu al-Faqih</option>
-          <option value="Bihar al-Anwar">Bihar al-Anwar</option>
+          <option value="Al-Kafi">Al-Kafi (full · 8 vols)</option>
+          <option value="Uyun Akhbar al-Rida">Uyun Akhbar al-Rida (full)</option>
+          <option value="Al-Khisal">Al-Khisal (full)</option>
+          <option value="Risalat al-Huquq">Risalat al-Huquq (full)</option>
+          <option value="Islamic Laws (Sistani)">Islamic Laws — Sistani (full)</option>
           <option value="Al-Sahifa al-Sajjadiyya">Sahifa Sajjadiyya</option>
-          <option value="Uyun Akhbar al-Rida">Uyun Akhbar al-Rida</option>
+          <option value="Bihar al-Anwar">Bihar al-Anwar</option>
         </select>
         <button class="btn gold" onclick="runSearch()">⌕ Search</button>
       </div>
@@ -473,7 +475,7 @@
         <span class="chip" onclick="quick('truth')">Truth · حق</span>
       </div>
       <div style="text-align:center;margin-top:14px">
-        <button class="btn" id="hadSearchBtn" onclick="enableHadithSearch()" style="background:var(--green-700)">📚 Also search the full hadith books (loads ~32 MB once)</button>
+        <button class="btn" id="hadSearchBtn" onclick="enableAllHadith()" style="background:var(--green-700)">📚 Also search the full hadith books in "All sources" (loads ~32 MB once)</button>
       </div>
 
       <div class="results" id="results"></div>
@@ -530,27 +532,24 @@
   </div>
 </section>
 
-<!-- ======= HADITH LIBRARIES (browse, lazy-loaded) ======= -->
+<!-- ======= HADITH & FIQH LIBRARY (browse, lazy-loaded) ======= -->
 <section class="alt" id="hadith-library">
   <div class="wrap">
     <div class="sec-head">
-      <span class="kicker">The Hadith Books · كُتُب الحديث</span>
-      <h2>Al-Kafi &amp; the Hadith Collections — in Full</h2>
-      <p>Complete Arabic with English translation — Al-Kafi (8 volumes), Uyun Akhbar al-Riḍā, al-Khiṣāl and Risālat al-Ḥuqūq: over 16,000 narrations. Each book loads only when you open it, so the site stays fast.</p>
+      <span class="kicker">The Great Books · المكتبة الحديثية والفقهية</span>
+      <h2>Read the Hadith Books &amp; Rulings in Full</h2>
+      <p>The full Arabic + English text of Al-Kāfī (8 vols), ʿUyūn Akhbār al-Riḍā, Al-Khiṣāl, Risālat al-Ḥuqūq — and the complete <em>Islamic Laws</em> of Āyatullāh al-Sīstānī. Pick a book and chapter; it loads on demand. You can also search each in full from the Search box above (choose the book in the filter).</p>
     </div>
     <div class="search-shell">
       <div class="search-box" style="justify-content:center;flex-wrap:wrap">
-        <select id="hadBook" style="flex:1;min-width:260px;padding:12px 14px;font-size:1rem"></select>
-        <button class="btn" onclick="openHadithBook()">📚 Load Book</button>
+        <select id="hbBook" style="min-width:240px;padding:12px 14px;font-size:1rem" onchange="loadHbBook()"></select>
+        <select id="hbChapter" style="flex:1;min-width:220px;padding:12px 14px;font-size:1rem"></select>
+        <button class="btn" onclick="showHbChapter()">📖 Open</button>
       </div>
-      <div id="hadChapWrap" style="display:none;margin-top:12px">
-        <div class="search-box" style="justify-content:center;flex-wrap:wrap">
-          <select id="hadChap" style="flex:1;min-width:260px;padding:12px 14px;font-size:1rem"></select>
-          <button class="btn" onclick="showHadithChapter()">Open Chapter</button>
-        </div>
-        <div class="lbl" id="hadLinks" style="text-align:center;margin-top:10px;color:var(--muted)"></div>
-      </div>
-      <div id="hadView" style="margin-top:20px"></div>
+      <div id="hbView" style="margin-top:24px"></div>
+      <p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:16px">
+        Hadith from <a href="https://thaqalayn.net" target="_blank" rel="noopener" style="color:var(--green-600)">Thaqalayn.net</a> · Islamic Laws © the Office of Sayyid al-Sīstānī (<a href="https://www.sistani.org/english/book/48/" target="_blank" rel="noopener" style="color:var(--green-600)">sistani.org</a>). Always verify with your own Marjaʿ.
+      </p>
     </div>
   </div>
 </section>
@@ -907,6 +906,82 @@ function searchNahj(terms, limit){
   return out;
 }
 
+/* ============================================================
+   FULL EXTERNAL BOOKS — lazy loaded (hadith + Sistani fiqh)
+   ============================================================ */
+const _scriptCache={};
+function loadScript(src){
+  if(_scriptCache[src]) return _scriptCache[src];
+  _scriptCache[src]=new Promise((res,rej)=>{
+    const s=document.createElement('script'); s.src=src;
+    s.onload=()=>res(true); s.onerror=()=>rej(new Error('Failed to load '+src));
+    document.head.appendChild(s);
+  });
+  return _scriptCache[src];
+}
+// source-filter value -> hadith book keys (files in library/hadith/<key>.js)
+const SOURCE_BOOKS={
+  "Al-Kafi":['kafi1','kafi2','kafi3','kafi4','kafi5','kafi6','kafi7','kafi8'],
+  "Uyun Akhbar al-Rida":['uyun1','uyun2'],
+  "Al-Khisal":['khisal'],
+  "Risalat al-Huquq":['huquq']
+};
+function loadHadith(key){ return loadScript('library/hadith/'+key+'.js').then(()=>window.LIB_HADITH&&window.LIB_HADITH[key]); }
+function loadSistani(){ return loadScript('library/sistani.js').then(()=>window.LIB_SISTANI); }
+
+function searchHadithBooks(keys, terms, limit){
+  const out=[];
+  for(const key of keys){
+    const b=window.LIB_HADITH&&window.LIB_HADITH[key]; if(!b) continue;
+    for(const ch of b.ch){
+      for(const hd of ch.h){
+        const hay=norm((hd[1]||'')+' '+(hd[2]||''));
+        if(terms.every(t=>hay.includes(t))){
+          out.push({ar:hd[1], tr:hd[2], src:b.name, ref:(ch.t||'')+' · #'+hd[0]});
+          if(out.length>=limit) return out;
+        }
+      }
+    }
+  }
+  return out;
+}
+function searchSistani(terms, limit){
+  const b=window.LIB_SISTANI; if(!b) return [];
+  const out=[];
+  for(const s of b.sec){
+    for(const p of s.p){
+      if(terms.every(t=>norm(p).includes(t))){
+        out.push({tr:p, plain:true, src:'Islamic Laws · Sistani', ref:s.t});
+        if(out.length>=limit) return out;
+      }
+    }
+  }
+  return out;
+}
+function renderBookResults(all, raw, label, capped){
+  const box=document.getElementById('results');
+  if(!all.length){ box.innerHTML='<div class="no-res">No match for “'+raw+'” in '+label+'.</div>'; return; }
+  const terms=norm(raw).split(/\s+/).filter(Boolean);
+  const note=`<div style="text-align:center;color:var(--muted);font-size:.86rem;margin-bottom:4px">${all.length}${capped?'+':''} result${all.length!==1?'s':''} · ${label}</div>`;
+  box.innerHTML=note+all.map(h=>resCard({ar:h.ar,tr:h.tr,plain:h.plain,src:h.src,ref:h.ref,terms})).join('');
+}
+function runBookSearch(filter, raw, terms){
+  const box=document.getElementById('results');
+  if(!raw){ box.innerHTML='<div class="no-res">Type a word to search the full <b>'+filter+'</b>.</div>'; return; }
+  if(filter==='Islamic Laws (Sistani)'){
+    box.innerHTML='<div class="no-res">Loading Islamic Laws (Sistani)… ⏳</div>';
+    loadSistani().then(()=>renderBookResults(searchSistani(terms,80), raw, 'Islamic Laws · Sistani', searchSistani(terms,81).length>80))
+      .catch(()=>box.innerHTML='<div class="no-res">Could not load Islamic Laws (offline?).</div>');
+    return;
+  }
+  const keys=SOURCE_BOOKS[filter];
+  box.innerHTML='<div class="no-res">Loading '+filter+' — '+keys.length+' volume'+(keys.length>1?'s':'')+'… ⏳<br><span style="font-size:.8rem">(first time only; cached afterwards)</span></div>';
+  Promise.all(keys.map(loadHadith)).then(()=>{
+    const hits=searchHadithBooks(keys,terms,80);
+    renderBookResults(hits, raw, filter, searchHadithBooks(keys,terms,81).length>80);
+  }).catch(()=>box.innerHTML='<div class="no-res">Could not load '+filter+' (offline?).</div>');
+}
+
 function runSearch(){
   const raw = document.getElementById('q').value.trim();
   const filter = document.getElementById('srcFilter').value;
@@ -916,6 +991,11 @@ function runSearch(){
   if(!raw && !filter){ box.innerHTML=''; return; }
   const nq = norm(raw);
   const terms = nq.split(/\s+/).filter(Boolean);
+
+  // Full external books (lazy-loaded on demand)
+  if(filter && (SOURCE_BOOKS[filter] || filter==='Islamic Laws (Sistani)')){
+    return runBookSearch(filter, raw, terms);
+  }
 
   let hits = corpus.filter(item=>{
     if(filter && item.src!==filter) return false;
@@ -932,7 +1012,7 @@ function runSearch(){
   if(raw && (!filter || filter==="Nahj al-Balagha")){ nahjHits = searchNahj(terms, 50); }
   // Full hadith books (only when loaded via the toggle, and not narrowed to a different source)
   let hadithHits = [];
-  if(raw && hadithSearchOn && !filter){ hadithHits = searchHadith(terms, 80); }
+  if(raw && hadithSearchOn && !filter){ hadithHits = searchHadithBooks(ALL_HADITH_KEYS, terms, 80); }
   // the full texts cover any curated duplicates when browsing everything
   if(!filter){ hits = hits.filter(h=>h.src!=="Qur'an" && h.src!=="Nahj al-Balagha"); }
   const all = hits.concat(nahjHits, hadithHits, quranHits);
@@ -1086,8 +1166,8 @@ function resCard(o){
   const urHTML = o.ur ? highlightNorm(o.ur, terms) : '';
   const faHTML = o.fa ? highlightNorm(o.fa, terms) : '';
   return `<div class="res" data-ar="${esc(o.ar||'')}" data-tr="${esc(o.tr||'')}" data-ur="${esc(o.ur||'')}" data-fa="${esc(o.fa||'')}" data-ref="${esc(o.ref||'')}">
-    <div class="ar arabic">${arHTML}${o.num?` <span style="color:var(--gold);font-size:1rem">﴿${o.num}﴾</span>`:''}</div>
-    ${o.tr?`<div class="tr">“${trHTML}”</div>`:''}
+    ${(o.ar||o.num)?`<div class="ar arabic">${arHTML}${o.num?` <span style="color:var(--gold);font-size:1rem">﴿${o.num}﴾</span>`:''}</div>`:''}
+    ${o.tr?`<div class="tr">${o.plain?'':'“'}${trHTML}${o.plain?'':'”'}</div>`:''}
     ${o.ur?`<div class="ur">${urHTML}</div>`:''}
     ${o.fa?`<div class="fa">${faHTML}</div>`:''}
     <div class="meta">${badge}
@@ -1269,75 +1349,88 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
-/* ============================================================
-   HADITH LIBRARIES (lazy-loaded per book)
-   ============================================================ */
-const HADITH_LIB=[
-  {key:"kafi1", name:"Al-Kafi · Vol 1 (Intellect, Knowledge & Tawḥīd)", n:1452},
-  {key:"kafi2", name:"Al-Kafi · Vol 2 (Faith, Disbelief & Duʿāʾ)", n:2343},
-  {key:"kafi3", name:"Al-Kafi · Vol 3 (Purification & Prayer)", n:2178},
-  {key:"kafi4", name:"Al-Kafi · Vol 4 (Zakāt, Fasting & Ḥajj)", n:2190},
-  {key:"kafi5", name:"Al-Kafi · Vol 5 (Jihād, Trade & Marriage)", n:2088},
-  {key:"kafi6", name:"Al-Kafi · Vol 6 (Children, Food & Drink)", n:2510},
-  {key:"kafi7", name:"Al-Kafi · Vol 7 (Wills, Inheritance & Ḥudūd)", n:892},
-  {key:"kafi8", name:"Al-Kafi · Vol 8 (al-Rawḍa)", n:597},
-  {key:"uyun1", name:"Uyun Akhbar al-Riḍā · Vol 1", n:347},
-  {key:"uyun2", name:"Uyun Akhbar al-Riḍā · Vol 2", n:607},
-  {key:"huquq", name:"Risālat al-Ḥuqūq (Imam al-Sajjād ع)", n:52},
-  {key:"khisal", name:"Al-Khiṣāl (al-Ṣadūq)", n:1282}
-];
+/* ---- "Also search all hadith" toggle (opt-in, loads ~32 MB once) ---- */
+const ALL_HADITH_KEYS=['kafi1','kafi2','kafi3','kafi4','kafi5','kafi6','kafi7','kafi8','uyun1','uyun2','khisal','huquq'];
 let hadithSearchOn=false;
-function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
-function ensureBook(key){
-  window.HADITH_BOOKS=window.HADITH_BOOKS||{};
-  if(window.HADITH_BOOKS[key]) return Promise.resolve();
-  return loadScript('library/hadith/'+key+'.js');
-}
-(function(){ const sel=document.getElementById('hadBook');
-  if(sel) sel.innerHTML=HADITH_LIB.map(b=>`<option value="${b.key}">${b.name} — ${b.n} narrations</option>`).join(''); })();
-function openHadithBook(){
-  const key=document.getElementById('hadBook').value;
-  const view=document.getElementById('hadView'); view.innerHTML='<div class="no-res">Loading book…</div>';
-  ensureBook(key).then(()=>{
-    const bk=window.HADITH_BOOKS[key];
-    document.getElementById('hadChap').innerHTML=bk.ch.map((c,i)=>`<option value="${i}">${i+1}. ${esc((c.t||('Chapter '+(i+1))).slice(0,90))}</option>`).join('');
-    document.getElementById('hadChapWrap').style.display='block';
-    const base=encodeURIComponent(bk.name.split(' · ')[0]);
-    document.getElementById('hadLinks').innerHTML=`📖 Read this book in &nbsp;`+
-      `<a target="_blank" rel="noopener" href="https://www.google.com/search?q=${base}+%D8%A7%D8%B1%D8%AF%D9%88+%D8%AA%D8%B1%D8%AC%D9%85%DB%81">اردو Urdu ↗</a> &nbsp;·&nbsp; `+
-      `<a target="_blank" rel="noopener" href="https://www.google.com/search?q=${base}+%D8%AA%D8%B1%D8%AC%D9%85%D9%87+%D9%81%D8%A7%D8%B1%D8%B3%DB%8C">فارسی Farsi ↗</a>`;
-    view.innerHTML=''; showHadithChapter();
-  }).catch(()=>{ view.innerHTML='<div class="no-res">Could not load this book (are you offline?).</div>'; });
-}
-function showHadithChapter(){
-  const key=document.getElementById('hadBook').value; const bk=window.HADITH_BOOKS&&window.HADITH_BOOKS[key]; if(!bk) return;
-  const ci=+document.getElementById('hadChap').value; const ch=bk.ch[ci]; if(!ch) return;
-  const view=document.getElementById('hadView');
-  view.innerHTML=`<div style="text-align:center;margin-bottom:14px">
-      <div class="ar arabic" style="font-size:1.4rem;color:var(--green-800)">${esc(bk.name)}</div>
-      <div style="color:var(--muted)">${esc(ch.t||'')} · ${ch.h.length} narration${ch.h.length!==1?'s':''}</div>
-    </div>` + ch.h.map(h=>resCard({ar:h[1],tr:h[2],ref:bk.name.split(' · ')[0]+' · #'+h[0]})).join('');
-  view.scrollIntoView({behavior:'smooth'});
-}
-function searchHadith(terms,limit){
-  if(!window.HADITH_BOOKS) return [];
-  const out=[];
-  for(const b of HADITH_LIB){
-    const bk=window.HADITH_BOOKS[b.key]; if(!bk) continue;
-    const short=b.name.split(' · ')[0];
-    for(const ch of bk.ch){ for(const h of ch.h){
-      const hay=norm((h[1]||'')+' '+(h[2]||''));
-      if(terms.every(t=>hay.includes(t))){ out.push({ar:h[1],tr:h[2],src:short,ref:b.name+' · #'+h[0]}); if(out.length>=limit) return out; }
-    }}
-  }
-  return out;
-}
-function enableHadithSearch(){
-  const btn=document.getElementById('hadSearchBtn'); btn.textContent='Loading hadith books… (~32 MB, one time)';
-  Promise.all(HADITH_LIB.map(b=>ensureBook(b.key))).then(()=>{
-    hadithSearchOn=true; btn.textContent='✓ Hadith books are now included in search'; btn.classList.add('gold');
+function enableAllHadith(){
+  const btn=document.getElementById('hadSearchBtn'); if(!btn) return;
+  if(hadithSearchOn){ runSearch(); return; }
+  btn.textContent='Loading hadith books… (~32 MB, one time)';
+  Promise.all(ALL_HADITH_KEYS.map(loadHadith)).then(()=>{
+    hadithSearchOn=true; btn.textContent='✓ Hadith books now included in "All sources" search'; btn.classList.add('gold');
     if(document.getElementById('q').value.trim()) runSearch();
   }).catch(()=>{ btn.textContent='Could not load hadith books (offline?) — tap to retry'; });
+}
+
+/* ---- Hadith & Fiqh library browser ---- */
+const HB_BOOKS=[
+  {key:'kafi1', label:'Al-Kāfī — Vol 1 (Uṣūl: Intellect, Tawḥīd, Ḥujja)'},
+  {key:'kafi2', label:'Al-Kāfī — Vol 2 (Uṣūl: Faith, Manners, Duʿāʾ)'},
+  {key:'kafi3', label:'Al-Kāfī — Vol 3 (Furūʿ: Purity, Prayer, Funerals)'},
+  {key:'kafi4', label:'Al-Kāfī — Vol 4 (Furūʿ: Zakāh, Fasting, Ḥajj)'},
+  {key:'kafi5', label:'Al-Kāfī — Vol 5 (Furūʿ: Trade, Marriage)'},
+  {key:'kafi6', label:'Al-Kāfī — Vol 6 (Furūʿ: Family, Food, Drink)'},
+  {key:'kafi7', label:'Al-Kāfī — Vol 7 (Furūʿ: Wills, Inheritance, Ḥudūd)'},
+  {key:'kafi8', label:'Al-Kāfī — Vol 8 (al-Rawḍa / Miscellany)'},
+  {key:'uyun1', label:'ʿUyūn Akhbār al-Riḍā — Vol 1'},
+  {key:'uyun2', label:'ʿUyūn Akhbār al-Riḍā — Vol 2'},
+  {key:'khisal', label:'Al-Khiṣāl — al-Shaykh al-Ṣadūq'},
+  {key:'huquq', label:'Risālat al-Ḥuqūq — Imam al-Sajjād (ع)'},
+  {key:'__sistani__', label:'Islamic Laws — Sayyid al-Sīstānī (Fiqh)'}
+];
+(function(){ const sel=document.getElementById('hbBook');
+  if(sel){ sel.innerHTML=HB_BOOKS.map(b=>`<option value="${b.key}">${b.label}</option>`).join('');
+    document.getElementById('hbView').innerHTML='<div class="no-res">Choose a book, then press <b>Open</b>. Each book loads only when you open it.</div>';
+  }
+})();
+function hbLoaded(key){ return key==='__sistani__' ? window.LIB_SISTANI : (window.LIB_HADITH&&window.LIB_HADITH[key]); }
+function loadHbData(key){ return key==='__sistani__' ? loadSistani() : loadHadith(key); }
+function loadHbBook(){
+  const key=document.getElementById('hbBook').value;
+  const chSel=document.getElementById('hbChapter');
+  chSel.innerHTML='<option>Loading…</option>';
+  return loadHbData(key).then(b=>{
+    if(key==='__sistani__')
+      chSel.innerHTML=b.sec.map((s,i)=>`<option value="${i}">${i+1}. ${esc((s.t||'Section').slice(0,80))}</option>`).join('');
+    else
+      chSel.innerHTML=b.ch.map((c,i)=>`<option value="${i}">${i+1}. ${esc((c.t||('Chapter '+(i+1))).slice(0,80))}</option>`).join('');
+    return b;
+  }).catch(()=>{ chSel.innerHTML='<option>Failed to load</option>'; });
+}
+function hbReadLinks(label){
+  const base=encodeURIComponent(label.split('—')[0].trim());
+  return `<div style="text-align:center;color:var(--muted);font-size:.82rem;margin:4px 0 12px">Read this book in: `+
+    `<a target="_blank" rel="noopener" href="https://www.google.com/search?q=${base}+اردو+ترجمہ" style="color:var(--green-600)">اردو Urdu ↗</a> · `+
+    `<a target="_blank" rel="noopener" href="https://www.google.com/search?q=${base}+ترجمه+فارسی" style="color:var(--green-600)">فارسی Farsi ↗</a></div>`;
+}
+function renderHb(){
+  const key=document.getElementById('hbBook').value;
+  const ci=+document.getElementById('hbChapter').value||0;
+  const view=document.getElementById('hbView');
+  const label=(HB_BOOKS.find(b=>b.key===key)||{}).label||'';
+  if(key==='__sistani__'){
+    const b=window.LIB_SISTANI; if(!b){view.innerHTML='';return;}
+    const s=b.sec[ci]; if(!s) return;
+    view.innerHTML=`<div style="text-align:center;margin-bottom:12px">
+        <div class="ar arabic" style="font-size:1.5rem;color:var(--green-800)">${esc(s.t||'')}</div>
+        <div style="color:var(--muted)">Islamic Laws · Sayyid al-Sīstānī · ${s.p.length} ruling${s.p.length!==1?'s':''}</div>
+      </div>` + s.p.map(p=>resCard({tr:p,plain:true,ref:(s.t||'Islamic Laws')})).join('');
+    view.scrollIntoView({behavior:'smooth'}); return;
+  }
+  const b=window.LIB_HADITH&&window.LIB_HADITH[key]; if(!b) return;
+  const ch=b.ch[ci]; if(!ch) return;
+  const short=b.name.split('—')[0].trim();
+  view.innerHTML=`<div style="text-align:center;margin-bottom:12px">
+      <div class="ar arabic" style="font-size:1.4rem;color:var(--green-800)">${esc(b.name)}</div>
+      <div style="color:var(--muted)">${esc(ch.t||'')} · ${ch.h.length} narration${ch.h.length!==1?'s':''}</div>
+    </div>` + hbReadLinks(label)
+    + ch.h.map(h=>resCard({ar:h[1],tr:h[2],ref:short+' · #'+h[0]})).join('');
+  view.scrollIntoView({behavior:'smooth'});
+}
+function showHbChapter(){
+  const key=document.getElementById('hbBook').value;
+  if(!hbLoaded(key)){ document.getElementById('hbView').innerHTML='<div class="no-res">Loading…</div>'; loadHbBook().then(()=>renderHb()); return; }
+  renderHb();
 }
 
 // search on Enter + search-as-you-type
