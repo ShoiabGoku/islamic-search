@@ -237,6 +237,21 @@
   .reader-nav{display:flex;justify-content:space-between;gap:10px;margin:14px 0}
   .reader-nav button{flex:1}
 
+  /* ----- 3D depth & motion ----- */
+  .results, #marajiGrid, #booksGrid, .tools-grid, #surahView, #nahjView, #hbView, #marjaSistani, .daily-grid{ perspective:1100px; }
+  .res,.marja,.book,.tool-card,.rcard{ transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease; transform-style:preserve-3d; }
+  .search-box{ transition:box-shadow .3s ease, transform .25s ease; }
+  .search-box:focus-within{ box-shadow:0 28px 60px rgba(18,80,59,.32), 0 0 0 2px var(--gold); transform:translateY(-3px); }
+  .btn,.chip{ transition:transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease; }
+  .btn:active{ transform:translateY(1px) scale(.98); }
+  .star3d{ display:block; width:46px; height:46px; margin:0 auto 12px; color:var(--gold); filter:drop-shadow(0 6px 10px rgba(201,162,74,.35)); }
+  @media (prefers-reduced-motion: no-preference){
+    .star3d{ transform-style:preserve-3d; animation:spin3d 11s linear infinite; }
+    @keyframes spin3d{ from{ transform:rotateY(0deg) rotateX(12deg);} to{ transform:rotateY(360deg) rotateX(12deg);} }
+    .float-soft{ animation:floaty 7s ease-in-out infinite; }
+    @keyframes floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+  }
+
   /* ----- floating tool dock ----- */
   .float-tools{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:60}
   .float-tools button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);cursor:pointer;
@@ -443,6 +458,13 @@
 <section id="search">
   <div class="wrap">
     <div class="sec-head">
+      <svg class="star3d" viewBox="0 0 100 100" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round">
+          <rect x="22" y="22" width="56" height="56" rx="4"/>
+          <rect x="22" y="22" width="56" height="56" rx="4" transform="rotate(45 50 50)"/>
+        </g>
+        <circle cx="50" cy="50" r="9" fill="currentColor"/>
+      </svg>
       <span class="kicker">Authentic Narrations</span>
       <h2>Search the Words of Guidance</h2>
       <p>Search in English or Arabic across the Qur'an, Nahj al-Balagha, the Four Books and the teachings of the Imams. Filter by source, then extend your search into the great digital libraries below.</p>
@@ -1503,6 +1525,34 @@ function showHbChapter(){
   if(!hbLoaded(key)){ document.getElementById('hbView').innerHTML='<div class="no-res">Loading…</div>'; loadHbBook().then(()=>renderHb()); return; }
   renderHb();
 }
+
+/* ---- 3D cursor-tilt on cards (delegated; survives re-renders) ---- */
+(function(){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(matchMedia('(hover: none)').matches) return; // skip on touch devices
+  function attachTilt(containerSel, cardSel, max){
+    document.querySelectorAll(containerSel).forEach(el=>{
+      let last=null;
+      const reset=c=>{ if(c){ c.style.transform=''; c.style.zIndex=''; c.style.boxShadow=''; } };
+      el.addEventListener('mousemove',e=>{
+        const card=e.target.closest(cardSel);
+        if(card!==last){ reset(last); last=card; }
+        if(!card || !el.contains(card)) return;
+        const r=card.getBoundingClientRect();
+        const px=(e.clientX-r.left)/r.width-0.5, py=(e.clientY-r.top)/r.height-0.5;
+        card.style.transform='perspective(900px) rotateY('+(px*max).toFixed(2)+'deg) rotateX('+(-py*max).toFixed(2)+'deg) translateZ(10px) scale(1.012)';
+        card.style.zIndex='5';
+        card.style.boxShadow='0 26px 50px rgba(10,46,35,.22)';
+      });
+      el.addEventListener('mouseleave',()=>{ reset(last); last=null; });
+    });
+  }
+  attachTilt('#results, #surahView, #nahjView, #hbView, #marjaSistani, #bmList', '.res', 7);
+  attachTilt('#marajiGrid', '.marja', 6);
+  attachTilt('#booksGrid', '.book', 8);
+  attachTilt('.tools-grid', '.tool-card', 7);
+  attachTilt('.daily-grid', '.rcard', 5);
+})();
 
 // search on Enter + search-as-you-type
 document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') runSearch(); });
