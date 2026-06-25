@@ -869,41 +869,65 @@ document.getElementById('marjaQ').addEventListener('keydown',e=>{ if(e.key==='En
 function marjaAsk(q){ document.getElementById('marjaQ').value=q; marjaSearch(q); document.getElementById('maraji').scrollIntoView({behavior:'smooth'}); }
 
 // Ask a fiqh question: show Sistani's own ruling inline + a link to each Marjaʿ's official answer
+// Fiqh books that have full searchable text (others get an official-search link)
+const FIQH_FILES=[
+  {key:'sistani', file:'library/sistani.js'},
+  {key:'khui',    file:'library/fiqh/khui.js'},
+  {key:'guide',   file:'library/fiqh/guide.js'}
+];
+const FIQH_COVERED=/sistani|khoei|khamenei|khomeini/i;   // Maraji whose rulings show inline
+function loadAllFiqh(){ return Promise.all(FIQH_FILES.map(f=>loadScript(f.file))); }
+// rank a fiqh book's sections by title relevance, return matching rulings
+function fiqhRulings(book, terms, limit){
+  const scored=[];
+  for(const s of book.sec){
+    const tn=norm(s.t||'');
+    const tscore=terms.reduce((a,t)=>a+(tn.includes(t)?1:0),0);
+    const matched=s.p.filter(p=>terms.every(t=>norm(p).includes(t)));
+    if(matched.length) scored.push({tscore, t:s.t, ps:matched});
+  }
+  scored.sort((a,b)=>b.tscore-a.tscore);
+  const out=[];
+  for(const s of scored){ for(const p of s.ps){ out.push({tr:p, plain:true, ref:s.t}); if(out.length>=limit) return out; } }
+  return out;
+}
+
 function marjaSearch(q){
   q=(q||'').trim();
   renderMaraji(q);                 // also filter the cards
   const box=document.getElementById('marjaResults');
   if(q.length<3){ box.innerHTML=''; return; }
-  // one button per Marjaʿ -> their official rulings, scoped to their site
-  const links = maraji.map(m=>{
+  // links for the Maraji whose books aren't bundled as text
+  const links = maraji.filter(m=>!FIQH_COVERED.test(m.n)).map(m=>{
     const d=marjaDomain(m);
     const url='https://www.google.com/search?q='+encodeURIComponent((d?'site:'+d+' ':'"'+m.n+'" ')+q);
     const shortName=m.n.replace(/^(Sayyid|Shaykh|Imam)\s+/,'');
     return `<a class="chip" target="_blank" rel="noopener" href="${url}" style="text-decoration:none">${shortName} ↗</a>`;
   }).join('');
   box.innerHTML =
-    `<div style="text-align:center;color:var(--green-800);font-weight:600;margin-bottom:10px">“${q}” — according to each Marjaʿ (opens their official rulings):</div>`+
-    `<div class="search-hint">${links}</div>`+
-    `<div id="marjaSistani" style="margin-top:20px"></div>`;
-  // Sayyid al-Sistani: search his full Islamic Laws and show matching rulings inline
-  const sBox=document.getElementById('marjaSistani');
-  sBox.innerHTML='<div class="no-res">Loading Sayyid al-Sīstānī’s Islamic Laws…</div>';
-  loadSistani().then(()=>{
+    `<div style="text-align:center;color:var(--green-800);font-weight:600;margin-bottom:6px">“${q}” — the ruling according to the Maraji:</div>`+
+    (links?`<div style="text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:6px">Other Maraji (opens their official rulings):</div><div class="search-hint">${links}</div>`:'')+
+    `<div id="marjaInline" style="margin-top:18px"></div>`;
+  const inline=document.getElementById('marjaInline');
+  inline.innerHTML='<div class="no-res">Loading the Maraji’s rulings…</div>';
+  loadAllFiqh().then(()=>{
     const STOP=new Set(['how','to','the','a','an','of','is','are','do','does','can','what','when','where','why','for','in','on','and','my','me','should','must','it','be','with','i','you','your','about','rules','ruling','law','laws']);
     let terms=norm(q).split(/\s+/).filter(Boolean);
     const content=terms.filter(t=>!STOP.has(t) && t.length>2);
-    if(content.length) terms=content;        // drop filler words like "how", "to"
-    let hits=sistaniRulings(terms, 6);
-    if(!hits.length && terms.length>1){ hits=sistaniRulings([terms.sort((a,b)=>b.length-a.length)[0]], 6); } // fall back to the main keyword
-    if(!hits.length){
-      sBox.innerHTML='<div class="no-res">No direct ruling matched “'+q+'” in Sayyid al-Sīstānī’s Islamic Laws. Try a simpler keyword (e.g. “fasting”, “wudu”), or use the links above for each Marjaʿ.</div>';
-      return;
+    if(content.length) terms=content;
+    if(terms.length>1){ terms=[terms.sort((a,b)=>b.length-a.length)[0]]; } // focus on the key topic word
+    let html='';
+    for(const f of FIQH_FILES){
+      const book=window.LIB_FIQH && window.LIB_FIQH[f.key]; if(!book) continue;
+      const hits=fiqhRulings(book, terms, 4);
+      if(!hits.length) continue;
+      html += `<div style="margin-top:8px"><h3 style="text-align:center;color:var(--green-800);font-size:1.35rem;margin-bottom:2px">📘 ${book.marja}</h3>`+
+              `<p style="text-align:center;color:var(--muted);font-size:.78rem;margin-bottom:12px">${book.name}</p>`+
+              hits.map(h=>resCard({tr:h.tr,plain:true,ref:h.ref})).join('')+`</div>`;
     }
-    sBox.innerHTML=
-      `<h3 style="text-align:center;color:var(--green-800);font-size:1.4rem;margin-bottom:6px">📘 Sayyid al-Sīstānī — Islamic Laws</h3>`+
-      `<p style="text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:14px">The actual rulings from his manual. For the other Maraji, use the links above. Always verify in your own Marjaʿ's risāla.</p>`+
-      hits.map(h=>resCard({tr:h.tr,plain:true,ref:h.ref})).join('');
-  }).catch(()=>{ sBox.innerHTML='<div class="no-res">Could not load Islamic Laws (offline?). Use the per-Marjaʿ links above.</div>'; });
+    inline.innerHTML = html ||
+      `<div class="no-res">No direct ruling matched “${q}”. Try a simpler keyword (e.g. “fasting”, “wudu”, “khums”), or use the links above for the other Maraji.</div>`;
+  }).catch(()=>{ inline.innerHTML='<div class="no-res">Could not load the rulings (offline?). Use the per-Marjaʿ links above.</div>'; });
 }
 
 // books
@@ -1469,21 +1493,25 @@ const HB_BOOKS=[
   {key:'uyun2', label:'ʿUyūn Akhbār al-Riḍā — Vol 2'},
   {key:'khisal', label:'Al-Khiṣāl — al-Shaykh al-Ṣadūq'},
   {key:'huquq', label:'Risālat al-Ḥuqūq — Imam al-Sajjād (ع)'},
-  {key:'__sistani__', label:'Islamic Laws — Sayyid al-Sīstānī (Fiqh)'}
+  {key:'__sistani__', label:'Islamic Laws — Sayyid al-Sīstānī (Fiqh)'},
+  {key:'__khui__', label:'Islamic Laws — Sayyid al-Khūʾī (Fiqh)'},
+  {key:'__guide__', label:'Religious Laws — Khomeini &amp; Khāmaneʾī (Fiqh)'}
 ];
+function fiqhKey(k){ const m=/^__(.+)__$/.exec(k); return m?m[1]:null; }
+function fiqhFileFor(fk){ const f=FIQH_FILES.find(x=>x.key===fk); return f?f.file:null; }
 (function(){ const sel=document.getElementById('hbBook');
   if(sel){ sel.innerHTML=HB_BOOKS.map(b=>`<option value="${b.key}">${b.label}</option>`).join('');
     document.getElementById('hbView').innerHTML='<div class="no-res">Choose a book, then press <b>Open</b>. Each book loads only when you open it.</div>';
   }
 })();
-function hbLoaded(key){ return key==='__sistani__' ? window.LIB_SISTANI : (window.LIB_HADITH&&window.LIB_HADITH[key]); }
-function loadHbData(key){ return key==='__sistani__' ? loadSistani() : loadHadith(key); }
+function hbLoaded(key){ const fk=fiqhKey(key); return fk ? (window.LIB_FIQH&&window.LIB_FIQH[fk]) : (window.LIB_HADITH&&window.LIB_HADITH[key]); }
+function loadHbData(key){ const fk=fiqhKey(key); return fk ? loadScript(fiqhFileFor(fk)).then(()=>window.LIB_FIQH[fk]) : loadHadith(key); }
 function loadHbBook(){
   const key=document.getElementById('hbBook').value;
   const chSel=document.getElementById('hbChapter');
   chSel.innerHTML='<option>Loading…</option>';
   return loadHbData(key).then(b=>{
-    if(key==='__sistani__')
+    if(fiqhKey(key))
       chSel.innerHTML=b.sec.map((s,i)=>`<option value="${i}">${i+1}. ${esc((s.t||'Section').slice(0,80))}</option>`).join('');
     else
       chSel.innerHTML=b.ch.map((c,i)=>`<option value="${i}">${i+1}. ${esc((c.t||('Chapter '+(i+1))).slice(0,80))}</option>`).join('');
@@ -1501,13 +1529,14 @@ function renderHb(){
   const ci=+document.getElementById('hbChapter').value||0;
   const view=document.getElementById('hbView');
   const label=(HB_BOOKS.find(b=>b.key===key)||{}).label||'';
-  if(key==='__sistani__'){
-    const b=window.LIB_SISTANI; if(!b){view.innerHTML='';return;}
+  const fk=fiqhKey(key);
+  if(fk){
+    const b=window.LIB_FIQH&&window.LIB_FIQH[fk]; if(!b){view.innerHTML='';return;}
     const s=b.sec[ci]; if(!s) return;
     view.innerHTML=`<div style="text-align:center;margin-bottom:12px">
         <div class="ar arabic" style="font-size:1.5rem;color:var(--green-800)">${esc(s.t||'')}</div>
-        <div style="color:var(--muted)">Islamic Laws · Sayyid al-Sīstānī · ${s.p.length} ruling${s.p.length!==1?'s':''}</div>
-      </div>` + s.p.map(p=>resCard({tr:p,plain:true,ref:(s.t||'Islamic Laws')})).join('');
+        <div style="color:var(--muted)">${esc(b.marja||'')} · ${s.p.length} ruling${s.p.length!==1?'s':''}</div>
+      </div>` + s.p.map(p=>resCard({tr:p,plain:true,ref:(s.t||b.name)})).join('');
     view.scrollIntoView({behavior:'smooth'}); return;
   }
   const b=window.LIB_HADITH&&window.LIB_HADITH[key]; if(!b) return;
