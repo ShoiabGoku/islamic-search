@@ -1,5 +1,5 @@
-/* Noor al-Hidayah service worker — offline caching */
-const CACHE = 'noor-v1';
+/* Noor al-Hidayah service worker — network-first so updates always show */
+const CACHE = 'noor-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -15,21 +15,30 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
-      // cache same-origin successful responses
-      if (res.ok && new URL(e.request.url).origin === self.location.origin) {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
-      }
-      return res;
-    }).catch(() => hit))
-  );
+  const url = new URL(e.request.url);
+  const sameOrigin = url.origin === self.location.origin;
+
+  if (sameOrigin) {
+    // Network-first: always fetch the latest when online, fall back to cache offline.
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+        }
+        return res;
+      }).catch(() => caches.match(e.request).then(hit => hit || caches.match('./index.html')))
+    );
+  } else {
+    // Cross-origin (fonts, audio): cache-first is fine.
+    e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request)));
+  }
 });
