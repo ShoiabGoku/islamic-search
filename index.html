@@ -564,10 +564,18 @@
     </div>
     <div class="search-shell" style="margin-bottom:28px">
       <div class="search-box">
-        <input type="text" id="marjaQ" placeholder="Search a Marjaʿ or a book…  e.g. Sistani / Minhaj / Tawdih al-Masail" />
-        <button class="btn gold" onclick="renderMaraji(document.getElementById('marjaQ').value)">⌕ Filter</button>
+        <input type="text" id="marjaQ" placeholder="Ask a fiqh question or a book…  e.g. how to fast / khums / wudu / Sistani" />
+        <button class="btn gold" onclick="marjaSearch(document.getElementById('marjaQ').value)">⌕ Find Ruling</button>
       </div>
-      <p style="text-align:center;color:var(--muted);font-size:.82rem;margin-top:10px">Tip: click any book title to open it on that Marjaʿ's official website.</p>
+      <div class="search-hint">
+        <span class="chip" onclick="marjaAsk('how to fast')">How to fast</span>
+        <span class="chip" onclick="marjaAsk('khums')">Khums</span>
+        <span class="chip" onclick="marjaAsk('wudu')">Wudu</span>
+        <span class="chip" onclick="marjaAsk('rules of prayer')">Rules of prayer</span>
+        <span class="chip" onclick="marjaAsk('hajj')">Hajj</span>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-size:.82rem;margin-top:10px">Ask a question to see Sayyid al-Sīstānī's ruling here, plus a link to each Marjaʿ's official answer. Or type a name/book to filter the cards.</p>
+      <div id="marjaResults" style="margin-top:18px"></div>
     </div>
     <div class="grid" id="marajiGrid"></div>
   </div>
@@ -835,6 +843,46 @@ function marjaRulings(i){
 }
 renderMaraji('');
 document.getElementById('marjaQ').addEventListener('input',e=>renderMaraji(e.target.value));
+document.getElementById('marjaQ').addEventListener('keydown',e=>{ if(e.key==='Enter') marjaSearch(e.target.value); });
+function marjaAsk(q){ document.getElementById('marjaQ').value=q; marjaSearch(q); document.getElementById('maraji').scrollIntoView({behavior:'smooth'}); }
+
+// Ask a fiqh question: show Sistani's own ruling inline + a link to each Marjaʿ's official answer
+function marjaSearch(q){
+  q=(q||'').trim();
+  renderMaraji(q);                 // also filter the cards
+  const box=document.getElementById('marjaResults');
+  if(q.length<3){ box.innerHTML=''; return; }
+  // one button per Marjaʿ -> their official rulings, scoped to their site
+  const links = maraji.map(m=>{
+    const d=marjaDomain(m);
+    const url='https://www.google.com/search?q='+encodeURIComponent((d?'site:'+d+' ':'"'+m.n+'" ')+q);
+    const shortName=m.n.replace(/^(Sayyid|Shaykh|Imam)\s+/,'');
+    return `<a class="chip" target="_blank" rel="noopener" href="${url}" style="text-decoration:none">${shortName} ↗</a>`;
+  }).join('');
+  box.innerHTML =
+    `<div style="text-align:center;color:var(--green-800);font-weight:600;margin-bottom:10px">“${q}” — according to each Marjaʿ (opens their official rulings):</div>`+
+    `<div class="search-hint">${links}</div>`+
+    `<div id="marjaSistani" style="margin-top:20px"></div>`;
+  // Sayyid al-Sistani: search his full Islamic Laws and show matching rulings inline
+  const sBox=document.getElementById('marjaSistani');
+  sBox.innerHTML='<div class="no-res">Loading Sayyid al-Sīstānī’s Islamic Laws…</div>';
+  loadSistani().then(()=>{
+    const STOP=new Set(['how','to','the','a','an','of','is','are','do','does','can','what','when','where','why','for','in','on','and','my','me','should','must','it','be','with','i','you','your','about','rules','ruling','law','laws']);
+    let terms=norm(q).split(/\s+/).filter(Boolean);
+    const content=terms.filter(t=>!STOP.has(t) && t.length>2);
+    if(content.length) terms=content;        // drop filler words like "how", "to"
+    let hits=sistaniRulings(terms, 6);
+    if(!hits.length && terms.length>1){ hits=sistaniRulings([terms.sort((a,b)=>b.length-a.length)[0]], 6); } // fall back to the main keyword
+    if(!hits.length){
+      sBox.innerHTML='<div class="no-res">No direct ruling matched “'+q+'” in Sayyid al-Sīstānī’s Islamic Laws. Try a simpler keyword (e.g. “fasting”, “wudu”), or use the links above for each Marjaʿ.</div>';
+      return;
+    }
+    sBox.innerHTML=
+      `<h3 style="text-align:center;color:var(--green-800);font-size:1.4rem;margin-bottom:6px">📘 Sayyid al-Sīstānī — Islamic Laws</h3>`+
+      `<p style="text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:14px">The actual rulings from his manual. For the other Maraji, use the links above. Always verify in your own Marjaʿ's risāla.</p>`+
+      hits.map(h=>resCard({tr:h.tr,plain:true,ref:h.ref})).join('');
+  }).catch(()=>{ sBox.innerHTML='<div class="no-res">Could not load Islamic Laws (offline?). Use the per-Marjaʿ links above.</div>'; });
+}
 
 // books
 document.getElementById('booksGrid').innerHTML = coreBooks.map(b=>`
@@ -855,8 +903,11 @@ document.getElementById('yr').textContent = new Date().getFullYear();
    SEARCH
    ============================================================ */
 function norm(s){
-  return (s||'').toLowerCase()
-    .replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'')
+  return (s||'').normalize('NFD')
+    .replace(/[̀-ͯ]/g,'')
+    .replace(/[ʾʿʼˀ`']/g,'')
+    .toLowerCase()
+    .replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'')
     .replace(/[أإآٱ]/g,'ا')
     .replace(/ى/g,'ي')
     .replace(/ؤ/g,'و')
@@ -955,6 +1006,23 @@ function searchSistani(terms, limit){
         if(out.length>=limit) return out;
       }
     }
+  }
+  return out;
+}
+// Question-style search: rank sections by how many query terms hit the title
+function sistaniRulings(terms, limit){
+  const b=window.LIB_SISTANI; if(!b) return [];
+  const scored=[];
+  for(const s of b.sec){
+    const tn=norm(s.t||'');
+    const tscore=terms.reduce((a,t)=>a+(tn.includes(t)?1:0),0);
+    const matched=s.p.filter(p=>terms.every(t=>norm(p).includes(t)));
+    if(matched.length) scored.push({tscore, t:s.t, ps:matched});
+  }
+  scored.sort((a,b)=>b.tscore-a.tscore);
+  const out=[];
+  for(const s of scored){
+    for(const p of s.ps){ out.push({tr:p, plain:true, src:'Islamic Laws · Sistani', ref:s.t}); if(out.length>=limit) return out; }
   }
   return out;
 }
@@ -1128,8 +1196,10 @@ function gotoNahj(n){ if(!n) return; document.getElementById('nahjNum').value=n;
    ============================================================ */
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 function normChar(c){
-  if(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/.test(c)) return '';
-  c=c.toLowerCase();
+  if(/[ʾʿʼˀ`']/.test(c)) return '';
+  c=c.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'').toLowerCase();
+  if(!c) return '';
+  c=c[0];
   if('أإآٱ'.indexOf(c)>=0) return 'ا';
   if(c==='ى') return 'ي';
   if(c==='ؤ') return 'و';
@@ -1344,10 +1414,11 @@ function handleHash(){
 window.addEventListener('hashchange',handleHash);
 if(location.hash) setTimeout(handleHash,80);
 
-/* ---- PWA: offline support when served over https ---- */
-if('serviceWorker' in navigator && location.protocol==='https:'){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* ---- Remove any old service worker + caches (they caused stale content) ---- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
 }
+if(window.caches){ caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{}); }
 
 /* ---- "Also search all hadith" toggle (opt-in, loads ~32 MB once) ---- */
 const ALL_HADITH_KEYS=['kafi1','kafi2','kafi3','kafi4','kafi5','kafi6','kafi7','kafi8','uyun1','uyun2','khisal','huquq'];
