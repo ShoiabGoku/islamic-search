@@ -336,6 +336,7 @@
       <a href="#search">Search</a>
       <a href="#quran-library">Qur'an</a>
       <a href="#nahj-library">Nahj al-Balagha</a>
+      <a href="#hadith-library">Hadith</a>
       <a href="#maraji">Maraji'</a>
       <a href="#books">Books</a>
       <a href="#about">About</a>
@@ -471,6 +472,9 @@
         <span class="chip" onclick="quick('parents')">Parents · والدين</span>
         <span class="chip" onclick="quick('truth')">Truth · حق</span>
       </div>
+      <div style="text-align:center;margin-top:14px">
+        <button class="btn" id="hadSearchBtn" onclick="enableHadithSearch()" style="background:var(--green-700)">📚 Also search the full hadith books (loads ~32 MB once)</button>
+      </div>
 
       <div class="results" id="results"></div>
 
@@ -522,6 +526,31 @@
         <button class="btn" onclick="showNahj()">⚔ Open</button>
       </div>
       <div id="nahjView" style="margin-top:24px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= HADITH LIBRARIES (browse, lazy-loaded) ======= -->
+<section class="alt" id="hadith-library">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">The Hadith Books · كُتُب الحديث</span>
+      <h2>Al-Kafi &amp; the Hadith Collections — in Full</h2>
+      <p>Complete Arabic with English translation — Al-Kafi (8 volumes), Uyun Akhbar al-Riḍā, al-Khiṣāl and Risālat al-Ḥuqūq: over 16,000 narrations. Each book loads only when you open it, so the site stays fast.</p>
+    </div>
+    <div class="search-shell">
+      <div class="search-box" style="justify-content:center;flex-wrap:wrap">
+        <select id="hadBook" style="flex:1;min-width:260px;padding:12px 14px;font-size:1rem"></select>
+        <button class="btn" onclick="openHadithBook()">📚 Load Book</button>
+      </div>
+      <div id="hadChapWrap" style="display:none;margin-top:12px">
+        <div class="search-box" style="justify-content:center;flex-wrap:wrap">
+          <select id="hadChap" style="flex:1;min-width:260px;padding:12px 14px;font-size:1rem"></select>
+          <button class="btn" onclick="showHadithChapter()">Open Chapter</button>
+        </div>
+        <div class="lbl" id="hadLinks" style="text-align:center;margin-top:10px;color:var(--muted)"></div>
+      </div>
+      <div id="hadView" style="margin-top:20px"></div>
     </div>
   </div>
 </section>
@@ -868,9 +897,12 @@ function runSearch(){
   // Full Nahj al-Balagha search
   let nahjHits = [];
   if(raw && (!filter || filter==="Nahj al-Balagha")){ nahjHits = searchNahj(terms, 50); }
+  // Full hadith books (only when loaded via the toggle, and not narrowed to a different source)
+  let hadithHits = [];
+  if(raw && hadithSearchOn && !filter){ hadithHits = searchHadith(terms, 80); }
   // the full texts cover any curated duplicates when browsing everything
   if(!filter){ hits = hits.filter(h=>h.src!=="Qur'an" && h.src!=="Nahj al-Balagha"); }
-  const all = hits.concat(nahjHits, quranHits);
+  const all = hits.concat(nahjHits, hadithHits, quranHits);
 
   if(all.length===0){
     box.innerHTML = `<div class="no-res">No match in the built-in collection for “${raw||filter}”.<br><br>Try the <b>full libraries</b> below — your search has been prepared for them.</div>`;
@@ -1202,6 +1234,77 @@ if(location.hash) setTimeout(handleHash,80);
 /* ---- PWA: offline support when served over https ---- */
 if('serviceWorker' in navigator && location.protocol==='https:'){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+/* ============================================================
+   HADITH LIBRARIES (lazy-loaded per book)
+   ============================================================ */
+const HADITH_LIB=[
+  {key:"kafi1", name:"Al-Kafi · Vol 1 (Intellect, Knowledge & Tawḥīd)", n:1452},
+  {key:"kafi2", name:"Al-Kafi · Vol 2 (Faith, Disbelief & Duʿāʾ)", n:2343},
+  {key:"kafi3", name:"Al-Kafi · Vol 3 (Purification & Prayer)", n:2178},
+  {key:"kafi4", name:"Al-Kafi · Vol 4 (Zakāt, Fasting & Ḥajj)", n:2190},
+  {key:"kafi5", name:"Al-Kafi · Vol 5 (Jihād, Trade & Marriage)", n:2088},
+  {key:"kafi6", name:"Al-Kafi · Vol 6 (Children, Food & Drink)", n:2510},
+  {key:"kafi7", name:"Al-Kafi · Vol 7 (Wills, Inheritance & Ḥudūd)", n:892},
+  {key:"kafi8", name:"Al-Kafi · Vol 8 (al-Rawḍa)", n:597},
+  {key:"uyun1", name:"Uyun Akhbar al-Riḍā · Vol 1", n:347},
+  {key:"uyun2", name:"Uyun Akhbar al-Riḍā · Vol 2", n:607},
+  {key:"huquq", name:"Risālat al-Ḥuqūq (Imam al-Sajjād ع)", n:52},
+  {key:"khisal", name:"Al-Khiṣāl (al-Ṣadūq)", n:1282}
+];
+let hadithSearchOn=false;
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+function ensureBook(key){
+  window.HADITH_BOOKS=window.HADITH_BOOKS||{};
+  if(window.HADITH_BOOKS[key]) return Promise.resolve();
+  return loadScript('library/hadith/'+key+'.js');
+}
+(function(){ const sel=document.getElementById('hadBook');
+  if(sel) sel.innerHTML=HADITH_LIB.map(b=>`<option value="${b.key}">${b.name} — ${b.n} narrations</option>`).join(''); })();
+function openHadithBook(){
+  const key=document.getElementById('hadBook').value;
+  const view=document.getElementById('hadView'); view.innerHTML='<div class="no-res">Loading book…</div>';
+  ensureBook(key).then(()=>{
+    const bk=window.HADITH_BOOKS[key];
+    document.getElementById('hadChap').innerHTML=bk.ch.map((c,i)=>`<option value="${i}">${i+1}. ${esc((c.t||('Chapter '+(i+1))).slice(0,90))}</option>`).join('');
+    document.getElementById('hadChapWrap').style.display='block';
+    const base=encodeURIComponent(bk.name.split(' · ')[0]);
+    document.getElementById('hadLinks').innerHTML=`📖 Read this book in &nbsp;`+
+      `<a target="_blank" rel="noopener" href="https://www.google.com/search?q=${base}+%D8%A7%D8%B1%D8%AF%D9%88+%D8%AA%D8%B1%D8%AC%D9%85%DB%81">اردو Urdu ↗</a> &nbsp;·&nbsp; `+
+      `<a target="_blank" rel="noopener" href="https://www.google.com/search?q=${base}+%D8%AA%D8%B1%D8%AC%D9%85%D9%87+%D9%81%D8%A7%D8%B1%D8%B3%DB%8C">فارسی Farsi ↗</a>`;
+    view.innerHTML=''; showHadithChapter();
+  }).catch(()=>{ view.innerHTML='<div class="no-res">Could not load this book (are you offline?).</div>'; });
+}
+function showHadithChapter(){
+  const key=document.getElementById('hadBook').value; const bk=window.HADITH_BOOKS&&window.HADITH_BOOKS[key]; if(!bk) return;
+  const ci=+document.getElementById('hadChap').value; const ch=bk.ch[ci]; if(!ch) return;
+  const view=document.getElementById('hadView');
+  view.innerHTML=`<div style="text-align:center;margin-bottom:14px">
+      <div class="ar arabic" style="font-size:1.4rem;color:var(--green-800)">${esc(bk.name)}</div>
+      <div style="color:var(--muted)">${esc(ch.t||'')} · ${ch.h.length} narration${ch.h.length!==1?'s':''}</div>
+    </div>` + ch.h.map(h=>resCard({ar:h[1],tr:h[2],ref:bk.name.split(' · ')[0]+' · #'+h[0]})).join('');
+  view.scrollIntoView({behavior:'smooth'});
+}
+function searchHadith(terms,limit){
+  if(!window.HADITH_BOOKS) return [];
+  const out=[];
+  for(const b of HADITH_LIB){
+    const bk=window.HADITH_BOOKS[b.key]; if(!bk) continue;
+    const short=b.name.split(' · ')[0];
+    for(const ch of bk.ch){ for(const h of ch.h){
+      const hay=norm((h[1]||'')+' '+(h[2]||''));
+      if(terms.every(t=>hay.includes(t))){ out.push({ar:h[1],tr:h[2],src:short,ref:b.name+' · #'+h[0]}); if(out.length>=limit) return out; }
+    }}
+  }
+  return out;
+}
+function enableHadithSearch(){
+  const btn=document.getElementById('hadSearchBtn'); btn.textContent='Loading hadith books… (~32 MB, one time)';
+  Promise.all(HADITH_LIB.map(b=>ensureBook(b.key))).then(()=>{
+    hadithSearchOn=true; btn.textContent='✓ Hadith books are now included in search'; btn.classList.add('gold');
+    if(document.getElementById('q').value.trim()) runSearch();
+  }).catch(()=>{ btn.textContent='Could not load hadith books (offline?) — tap to retry'; });
 }
 
 // search on Enter + search-as-you-type
