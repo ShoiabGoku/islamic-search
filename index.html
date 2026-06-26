@@ -777,6 +777,7 @@
 <script src="library/quran.js"></script>
 <script src="library/nahj.js"></script>
 <script src="library/quiz.js"></script>
+<script src="library/quiz2.js"></script>
 <script>
 /* ============================================================
    DATA
@@ -1771,7 +1772,7 @@ function quizMakeOne(d){
   if(!d) d=1+qRand(4);
   // sometimes use a hand-written curated question of this difficulty
   const curated=(typeof LIB_QUIZ!=='undefined')?LIB_QUIZ.filter(q=>q.d===d):[];
-  if(curated.length && Math.random()<0.18){ const q=qPick(curated); return {q:q.q,o:q.o,a:q.a,ex:q.ex,cat:q.cat,d:q.d,verse:q.verse}; }
+  if(curated.length && Math.random()<0.5){ const q=qPick(curated); return {q:q.q,o:q.o,a:q.a,ex:q.ex,cat:q.cat,d:q.d,verse:q.verse}; }
   const gens=[genSurahId];
   if(d>=2){ gens.push(genVerseCount, genSurahOrder); }
   if(d>=3){ gens.push(genContinue); }
