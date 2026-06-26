@@ -1732,21 +1732,64 @@ function genTranslation(d){
   return { q:{en:"What is the meaning of this verse?",ar:"ما معنى هذه الآية؟",ur:"اس آیت کا مفہوم کیا ہے؟",fa:"معنای این آیه چیست؟"},
     verse:v[1], o:[v,...distract].map(x=>[x[2]||'',x[1]||'',x[3]||x[2]||'',x[4]||x[2]||'']), a:0, cat:"Qur'an", d, ex:`${su.nt} ${su.s}:${v[0]}.` };
 }
+function qTrim(t){ t=t||''; return t.length>240 ? t.slice(0,240).replace(/\s\S*$/,'')+' …' : t; }
+// pool of Arabic-text sources (loaded ones only) for "which book is this from?"
+function quizSourcePool(){
+  const pool=[{ name:{en:"The Holy Qur'an",ar:"القرآن الكريم",ur:"قرآن مجید",fa:"قرآن کریم"}, get:()=>qPick(qPick(LIB_QURAN).v)[1] }];
+  if(window.LIB_NAHJ) pool.push({ name:{en:"Nahj al-Balāghah",ar:"نهج البلاغة",ur:"نہج البلاغہ",fa:"نهج‌البلاغه"}, get:()=>qPick(LIB_NAHJ.items)[3] });
+  if(window.LIB_HADITH){
+    const kafi=['kafi1','kafi2','kafi3','kafi4','kafi5','kafi6','kafi7','kafi8'].filter(k=>LIB_HADITH[k]);
+    if(kafi.length) pool.push({ name:{en:"Al-Kāfī",ar:"الكافي",ur:"الکافی",fa:"الکافی"}, get:()=>{ const b=LIB_HADITH[qPick(kafi)]; return qPick(qPick(b.ch).h)[1]; } });
+    const uy=['uyun1','uyun2'].filter(k=>LIB_HADITH[k]);
+    if(uy.length) pool.push({ name:{en:"ʿUyūn Akhbār al-Riḍā",ar:"عيون أخبار الرضا",ur:"عیون اخبار الرضا",fa:"عیون اخبار الرضا"}, get:()=>qPick(qPick(LIB_HADITH[qPick(uy)].ch).h)[1] });
+    if(LIB_HADITH.khisal) pool.push({ name:{en:"Al-Khiṣāl",ar:"الخصال",ur:"الخصال",fa:"الخصال"}, get:()=>qPick(qPick(LIB_HADITH.khisal.ch).h)[1] });
+  }
+  return pool;
+}
+// "which book is this passage from?"
+function genSource(d){
+  const pool=quizShuffle(quizSourcePool());
+  if(pool.length<4) return genSurahId(d);
+  const correct=pool[0]; let verse='', g=0;
+  while((!verse||verse.length<10) && g++<12) verse=correct.get()||'';
+  const opts=[correct, pool[1], pool[2], pool[3]];
+  return { q:{en:"Which book is this passage from?",ar:"مِن أيِّ كتابٍ هذا النص؟",ur:"یہ اقتباس کس کتاب سے ہے؟",fa:"این متن از کدام کتاب است؟"},
+    verse:qTrim(verse), o:opts.map(s=>[s.name.en,s.name.ar,s.name.ur,s.name.fa]), a:0, cat:"Sources", d, ex:`This passage is from ${correct.name.en}.` };
+}
+// "which part of Nahj al-Balagha is this?"
+function genNahjSection(d){
+  if(!window.LIB_NAHJ) return genSurahId(d);
+  const it=qPick(LIB_NAHJ.items), sec=LIB_NAHJ.abbr[it[0]];
+  const lab={Sermon:{en:"A Sermon (Khuṭbah)",ar:"خطبة",ur:"خطبہ",fa:"خطبه"},Letter:{en:"A Letter (Risālah)",ar:"رسالة",ur:"مکتوب",fa:"نامه"},Saying:{en:"A Saying (Ḥikmah)",ar:"حكمة",ur:"حکمت",fa:"حکمت"}};
+  const others=['Sermon','Letter','Saying'].filter(x=>x!==sec);
+  const o=[lab[sec],lab[others[0]],lab[others[1]]].map(x=>[x.en,x.ar,x.ur,x.fa]);
+  o.push(["A Qurʾanic verse","آية قرآنية","قرآنی آیت","آیهٔ قرآن"]);
+  return { q:{en:"This passage is from which part of Nahj al-Balāghah?",ar:"هذا النصّ من أيِّ قسمٍ من نهج البلاغة؟",ur:"یہ اقتباس نہج البلاغہ کے کس حصے سے ہے؟",fa:"این متن از کدام بخش نهج‌البلاغه است؟"},
+    verse:qTrim(it[3]), o, a:0, cat:"Nahj al-Balagha", d, ex:`This is a ${sec.toLowerCase()} from Nahj al-Balāghah.` };
+}
 function quizMakeOne(d){
   if(!d) d=1+qRand(4);
   // sometimes use a hand-written curated question of this difficulty
   const curated=(typeof LIB_QUIZ!=='undefined')?LIB_QUIZ.filter(q=>q.d===d):[];
-  if(curated.length && Math.random()<0.22){ const q=qPick(curated); return {q:q.q,o:q.o,a:q.a,ex:q.ex,cat:q.cat,d:q.d,verse:q.verse}; }
+  if(curated.length && Math.random()<0.18){ const q=qPick(curated); return {q:q.q,o:q.o,a:q.a,ex:q.ex,cat:q.cat,d:q.d,verse:q.verse}; }
   const gens=[genSurahId];
   if(d>=2){ gens.push(genVerseCount, genSurahOrder); }
   if(d>=3){ gens.push(genContinue); }
   if(quizState.lang!=='ar'){ gens.push(genTranslation); }
+  if(window.LIB_NAHJ){ gens.push(genNahjSection); }
+  if(quizSourcePool().length>=4){ gens.push(genSource, genSource); } // cross-book question, weighted
   try{ return qPick(gens)(d); }catch(e){ return genSurahId(d); }
 }
-function quizStart(){
-  if(typeof window.LIB_QURAN==='undefined'){ document.getElementById('quizRun').innerHTML='<div class="no-res">The Quran library is still loading — please try again in a moment.</div>'; return; }
+// Load Nahj (already loaded) + a few hadith books so the quiz can pull from them
+const QUIZ_LOAD_KEYS=['kafi1','uyun1','khisal','huquq'];
+function ensureQuizSources(){
+  const jobs=[];
+  if(typeof loadHadith==='function'){ QUIZ_LOAD_KEYS.forEach(k=>{ if(!(window.LIB_HADITH&&LIB_HADITH[k])) jobs.push(loadHadith(k).catch(()=>{})); }); }
+  return Promise.all(jobs);
+}
+function quizBuild(){
   const sess=[], seen=new Set(); let guard=0;
-  while(sess.length<QUIZ_LEN && guard++<400){
+  while(sess.length<QUIZ_LEN && guard++<500){
     const item=quizMakeOne(quizState.diff);
     if(!item || !item.o || item.o.length<2) continue;
     const key=(item.verse||'')+'|'+(item.q&&item.q.en||'')+'|'+(item.o[0]&&item.o[0][0]);
@@ -1755,8 +1798,14 @@ function quizStart(){
     sess.push({ q:item, order, a:order.indexOf(item.a) });
   }
   quizState.pool=sess; quizState.idx=0; quizState.score=0;
-  document.getElementById('quizStart').style.display='none';
   renderQuiz();
+}
+function quizStart(){
+  if(typeof window.LIB_QURAN==='undefined'){ document.getElementById('quizRun').innerHTML='<div class="no-res">The Quran library is still loading — please try again in a moment.</div>'; return; }
+  document.getElementById('quizStart').style.display='none';
+  const run=document.getElementById('quizRun');
+  run.innerHTML='<div class="quiz-card"><div class="no-res">Preparing questions from the Qur’an, Nahj al-Balāghah and the hadith books… ⏳<br><span style="font-size:.8rem">(first time loads a few books; instant afterwards)</span></div></div>';
+  ensureQuizSources().then(quizBuild).catch(quizBuild);
 }
 function renderQuiz(){
   const st=quizState; const item=st.pool[st.idx];
