@@ -482,11 +482,14 @@
       <div class="tool-card">
         <div class="ic">🕌</div>
         <h4>Prayer Times</h4>
-        <input type="text" id="ptCity" placeholder="City (e.g. Karbala)" />
+        <input type="text" id="ptCity" placeholder="City or area (e.g. Karbala)" />
         <input type="text" id="ptCountry" placeholder="Country (e.g. Iraq)" />
-        <button class="btn" onclick="getPrayerTimes()">Get Times</button>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn" onclick="getPrayerTimes()">Get Times</button>
+          <button class="btn" style="background:var(--green-700)" onclick="getPrayerTimesByGeo()">📍 My location</button>
+        </div>
         <ul class="ptimes" id="ptList"></ul>
-        <div class="lbl" id="ptNote"></div>
+        <div class="lbl" id="ptNote">Tip: if your district isn't found, try the nearest city — or tap 📍 My location.</div>
       </div>
 
       <div class="tool-card">
@@ -1529,37 +1532,73 @@ function playAudio(url){
 })();
 
 // Prayer times via Aladhan (Shia Ithnā ʿAsharī method)
+function ptRender(d){
+  const list=document.getElementById('ptList'); const note=document.getElementById('ptNote');
+  if(!d||d.code!==200||!d.data||!d.data.timings){ note.textContent='Could not find that place — try just the city name, or use 📍 My location.'; return; }
+  const t=d.data.timings;
+  const want=[['Fajr','Fajr'],['Sunrise','Sunrise'],['Dhuhr','Ẓuhr'],['Asr','ʿAṣr'],['Maghrib','Maghrib'],['Isha','ʿIshāʾ']];
+  list.innerHTML=want.map(w=>`<li><span>${w[1]}</span><b>${t[w[0]]}</b></li>`).join('');
+  const tz=(d.data.meta&&d.data.meta.timezone)?' · '+d.data.meta.timezone:'';
+  note.textContent='Shia Ithnā ʿAsharī method'+tz;
+}
+function ptFetch(url){
+  const list=document.getElementById('ptList'); const note=document.getElementById('ptNote');
+  note.textContent='Loading…'; list.innerHTML='';
+  fetch(url).then(r=>r.json()).then(ptRender).catch(()=>{ note.textContent='Could not load times (are you offline?).'; });
+}
 function getPrayerTimes(){
   const city=document.getElementById('ptCity').value.trim();
   const country=document.getElementById('ptCountry').value.trim();
-  const list=document.getElementById('ptList'); const note=document.getElementById('ptNote');
-  if(!city){ note.textContent='Please enter a city.'; return; }
-  note.textContent='Loading…'; list.innerHTML='';
+  const note=document.getElementById('ptNote');
+  if(!city && !country){ note.textContent='Enter a city or area, or tap 📍 My location.'; return; }
   prefs.city=city; prefs.country=country; savePrefs();
-  const url='https://api.aladhan.com/v1/timingsByCity?city='+encodeURIComponent(city)+'&country='+encodeURIComponent(country)+'&method=0';
-  fetch(url).then(r=>r.json()).then(d=>{
-    if(!d||d.code!==200){ note.textContent='City not found — check spelling.'; return; }
-    const t=d.data.timings;
-    const want=[['Fajr','Fajr'],['Sunrise','Sunrise'],['Dhuhr','Ẓuhr'],['Asr','ʿAṣr'],['Maghrib','Maghrib'],['Isha','ʿIshāʾ']];
-    list.innerHTML=want.map(w=>`<li><span>${w[1]}</span><b>${t[w[0]]}</b></li>`).join('');
-    note.textContent='Method: Shia Ithnā ʿAsharī (Leva, Qum)';
-  }).catch(()=>{ note.textContent='Could not load times (are you offline?).'; });
+  // timingsByAddress is far more forgiving (handles districts/areas), method=0 = Shia Ithnā ʿAsharī
+  const address=[city,country].filter(Boolean).join(', ');
+  ptFetch('https://api.aladhan.com/v1/timingsByAddress?address='+encodeURIComponent(address)+'&method=0');
+}
+function getPrayerTimesByGeo(){
+  const note=document.getElementById('ptNote');
+  if(!navigator.geolocation){ note.textContent='Location not available — type a city instead.'; return; }
+  note.textContent='Locating you…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    ptFetch('https://api.aladhan.com/v1/timings?latitude='+p.coords.latitude+'&longitude='+p.coords.longitude+'&method=0');
+  },()=>{ note.textContent='Location permission denied — type a city instead.'; },{timeout:10000});
 }
 if(prefs.city){ document.getElementById('ptCity').value=prefs.city; document.getElementById('ptCountry').value=prefs.country||''; getPrayerTimes(); }
 
-// Qibla direction (great-circle bearing to the Kaʿbah)
+// Qibla — live compass that points to the Kaʿbah relative to the phone's heading
+let _qiblaBearing=null, _qiblaAttached=false;
 function findQibla(){
   const txt=document.getElementById('qiblaText');
+  // iOS 13+: must ask for motion/orientation permission inside the user gesture
+  if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
+    DeviceOrientationEvent.requestPermission().then(s=>{ if(s==='granted') attachQiblaCompass(); }).catch(()=>{});
+  } else { attachQiblaCompass(); }
   if(!navigator.geolocation){ txt.textContent='Geolocation is not available.'; return; }
   txt.textContent='Locating you…';
   navigator.geolocation.getCurrentPosition(p=>{
     const lat=p.coords.latitude*Math.PI/180, lon=p.coords.longitude*Math.PI/180;
     const klat=21.4225*Math.PI/180, klon=39.8262*Math.PI/180, dl=klon-lon;
     let b=Math.atan2(Math.sin(dl), Math.cos(lat)*Math.tan(klat)-Math.sin(lat)*Math.cos(dl))*180/Math.PI;
-    b=(b+360)%360;
-    document.getElementById('qiblaNeedle').style.transform='rotate('+b+'deg)';
-    txt.textContent='Qibla: '+b.toFixed(0)+'° from true North.';
-  },()=>{ txt.textContent='Location permission was denied.'; });
+    _qiblaBearing=(b+360)%360;
+    document.getElementById('qiblaNeedle').style.transform='rotate('+_qiblaBearing+'deg)';
+    txt.textContent = _qiblaAttached
+      ? 'Hold the phone flat and turn until the 🕋 points straight up — that is the Qibla.'
+      : 'Qibla is '+_qiblaBearing.toFixed(0)+'° from North. (No compass on this device — use the angle with a compass.)';
+  },()=>{ txt.textContent='Location permission was denied.'; },{timeout:10000,enableHighAccuracy:true});
+}
+function attachQiblaCompass(){
+  if(_qiblaAttached) return;
+  function handle(e){
+    let heading=null;
+    if(typeof e.webkitCompassHeading==='number') heading=e.webkitCompassHeading;        // iOS: degrees clockwise from N
+    else if(e.alpha!=null) heading=(360-e.alpha)%360;                                    // Android (absolute): approx
+    if(heading==null || _qiblaBearing==null) return;
+    const rot=(_qiblaBearing-heading+360)%360;                                           // Qibla relative to phone's "up"
+    const n=document.getElementById('qiblaNeedle'); if(n) n.style.transform='rotate('+rot+'deg)';
+  }
+  if('ondeviceorientationabsolute' in window){ window.addEventListener('deviceorientationabsolute',handle,true); _qiblaAttached=true; }
+  else if(window.DeviceOrientationEvent){ window.addEventListener('deviceorientation',handle,true); _qiblaAttached=true; }
 }
 
 // Tasbīḥ counter (Tasbīḥ of al-Zahrāʾ ع)
