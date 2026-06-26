@@ -252,6 +252,29 @@
     @keyframes floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
   }
 
+  /* ----- history events ----- */
+  .ev-list{display:grid;gap:16px;margin-top:24px}
+  .ev{background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:14px;padding:20px 22px;box-shadow:0 6px 18px rgba(10,46,35,.07);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+  .ev .ev-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+  .ev .ev-cat{font-size:.68rem;letter-spacing:1px;text-transform:uppercase;background:var(--green-700);color:var(--gold-soft);padding:4px 10px;border-radius:20px;font-weight:600}
+  .ev .ev-when{font-size:.78rem;color:var(--muted)}
+  .ev h3{font-size:1.35rem;color:var(--green-800);line-height:1.3;margin:2px 0 4px}
+  .ev .ev-place{font-size:.82rem;color:var(--green-600);margin-bottom:8px}
+  .ev .ev-sum{color:var(--ink);font-family:'Cormorant Garamond',serif;font-size:1.12rem;line-height:1.5}
+  .ev .ev-det{display:none;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);color:var(--ink);line-height:1.85}
+  .ev.open .ev-det{display:block;animation:fade .35s ease}
+  .ev .ev-toggle{margin-top:12px;font-size:.85rem;background:var(--cream-2);border:1px solid var(--line);color:var(--green-700);border-radius:10px;padding:8px 16px;cursor:pointer;font-family:inherit;transition:.18s}
+  .ev .ev-toggle:hover{background:var(--green-700);color:var(--cream)}
+  .ev[dir=rtl] h3,.ev[dir=rtl] .ev-sum,.ev[dir=rtl] .ev-det{text-align:right}
+  .ev.ar h3,.ev.ar .ev-sum,.ev.ar .ev-det{font-family:'Amiri',serif}
+  .ev.ar .ev-sum,.ev.ar .ev-det{font-size:1.3rem;line-height:2.1}
+  .ev.ur h3,.ev.ur .ev-sum,.ev.ur .ev-det{font-family:'Noto Nastaliq Urdu',serif;line-height:2.5}
+  .ev.fa h3,.ev.fa .ev-sum,.ev.fa .ev-det{font-family:'Vazirmatn',serif}
+  body.dark .ev{background:#11221b}
+  body.dark .ev h3{color:var(--gold-light)}
+  body.dark .ev .ev-sum,body.dark .ev .ev-det{color:#e8e6db}
+  body.dark .ev .ev-toggle{background:#0c1a14;color:var(--gold-light)}
+
   /* ----- quiz ----- */
   .quiz-shell{max-width:760px;margin:0 auto}
   .quiz-setup{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-bottom:8px}
@@ -394,6 +417,7 @@
       <a href="#quran-library">Qur'an</a>
       <a href="#nahj-library">Nahj al-Balagha</a>
       <a href="#hadith-library">Hadith</a>
+      <a href="#history">History</a>
       <a href="#quiz">Quiz</a>
       <a href="#maraji">Maraji'</a>
       <a href="#books">Books</a>
@@ -681,6 +705,39 @@
   </div>
 </section>
 
+<!-- ======= ISLAMIC HISTORY ======= -->
+<section class="alt" id="history">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Islamic History · التاريخ الإسلامي</span>
+      <h2>Events of Islamic History</h2>
+      <p>Search the great events — from the birth of the Prophet (ṣ) to Karbalāʾ and the Occultation — and read the full details in English, Arabic, Urdu or Farsi.</p>
+    </div>
+    <div class="quiz-shell" style="max-width:840px">
+      <div class="search-box">
+        <input type="text" id="evQ" placeholder="Search an event…  e.g. Karbala / Ghadir / Badr / غدیر / کربلا" />
+        <button class="btn gold" onclick="renderEvents()">⌕ Search</button>
+      </div>
+      <div class="quiz-setup" style="margin-top:14px">
+        <div class="quiz-group" style="padding:10px 14px">
+          <h4>Language</h4>
+          <div class="seg" id="evLang">
+            <button data-l="en" class="sel">English</button>
+            <button data-l="ar">العربية</button>
+            <button data-l="ur">اردو</button>
+            <button data-l="fa">فارسی</button>
+          </div>
+        </div>
+        <div class="quiz-group" style="padding:10px 14px">
+          <h4>Category</h4>
+          <div class="seg" id="evCat"></div>
+        </div>
+      </div>
+      <div class="ev-list" id="evList"></div>
+    </div>
+  </div>
+</section>
+
 <!-- ======= QUIZ ======= -->
 <section id="quiz">
   <div class="wrap">
@@ -778,6 +835,7 @@
 <script src="library/nahj.js"></script>
 <script src="library/quiz.js"></script>
 <script src="library/quiz2.js"></script>
+<script src="library/events.js"></script>
 <script>
 /* ============================================================
    DATA
@@ -1038,12 +1096,13 @@ function norm(s){
     .replace(/[̀-ͯ]/g,'')
     .replace(/[ʾʿʼˀ`']/g,'')
     .toLowerCase()
-    .replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'')
-    .replace(/[أإآٱ]/g,'ا')
-    .replace(/ى/g,'ي')
+    .replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'')
+    .replace(/[آأإٱ]/g,'ا')
+    .replace(/[ىیے]/g,'ي')
     .replace(/ؤ/g,'و')
     .replace(/ئ/g,'ي')
-    .replace(/ة/g,'ه');
+    .replace(/[ةہۃھ]/g,'ه')
+    .replace(/ک/g,'ك');
 }
 function highlight(text,terms){
   let out = text;
@@ -1328,14 +1387,15 @@ function gotoNahj(n){ if(!n) return; document.getElementById('nahjNum').value=n;
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 function normChar(c){
   if(/[ʾʿʼˀ`']/.test(c)) return '';
-  c=c.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'').toLowerCase();
+  c=c.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'').toLowerCase();
   if(!c) return '';
   c=c[0];
-  if('أإآٱ'.indexOf(c)>=0) return 'ا';
-  if(c==='ى') return 'ي';
+  if('آأإٱ'.indexOf(c)>=0) return 'ا';
+  if('ىیے'.indexOf(c)>=0) return 'ي';
   if(c==='ؤ') return 'و';
   if(c==='ئ') return 'ي';
-  if(c==='ة') return 'ه';
+  if('ةہۃھ'.indexOf(c)>=0) return 'ه';
+  if(c==='ک') return 'ك';
   return c;
 }
 // diacritic-insensitive highlighter (works for Arabic and English)
@@ -1866,6 +1926,48 @@ function quizResult(){
   document.getElementById('quiz').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function quizReset(){ document.getElementById('quizRun').innerHTML=''; document.getElementById('quizStart').style.display=''; document.getElementById('quiz').scrollIntoView({behavior:'smooth'}); }
+
+/* ============================================================
+   ISLAMIC HISTORY EVENTS
+   ============================================================ */
+const evState={lang:'en',cat:'all'};
+const EV_LBL={ read:{en:'Read full details ▼',ar:'اقرأ التفاصيل ▼',ur:'مکمل تفصیل ▼',fa:'جزئیات کامل ▼'},
+               hide:{en:'Hide details ▲',ar:'إخفاء التفاصيل ▲',ur:'بند کریں ▲',fa:'بستن ▲'} };
+(function(){
+  if(typeof window.LIB_EVENTS==='undefined') return;
+  const cats=['all',...new Set(LIB_EVENTS.map(e=>e.cat))];
+  const cc=document.getElementById('evCat');
+  if(cc){ cc.innerHTML=cats.map((c,i)=>`<button data-c="${esc(c)}" class="${i===0?'sel':''}">${c==='all'?'All':esc(c)}</button>`).join('');
+    cc.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ cc.querySelectorAll('button').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); evState.cat=b.dataset.c; renderEvents(); })); }
+  const lc=document.getElementById('evLang');
+  if(lc) lc.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ lc.querySelectorAll('button').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); evState.lang=b.dataset.l; renderEvents(); }));
+  const inp=document.getElementById('evQ');
+  if(inp){ inp.addEventListener('input',renderEvents); inp.addEventListener('keydown',e=>{ if(e.key==='Enter') renderEvents(); }); }
+  renderEvents();
+})();
+function evHay(e){ let s=e.id+' '+e.cat+' '; ['en','ar','ur','fa'].forEach(l=>{ s+=(e.t[l]||'')+' '+(e.sum[l]||'')+' '+(e.det[l]||'')+' '+(e.when[l]||'')+' '+(e.place[l]||'')+' '; }); return norm(s); }
+function evToggle(btn){ const ev=btn.closest('.ev'); const open=ev.classList.toggle('open'); btn.textContent=open?EV_LBL.hide[evState.lang]:EV_LBL.read[evState.lang]; }
+function renderEvents(){
+  if(typeof window.LIB_EVENTS==='undefined') return;
+  const L=evState.lang, rtl=L!=='en';
+  const terms=norm((document.getElementById('evQ').value||'').trim()).split(/\s+/).filter(Boolean);
+  const list=LIB_EVENTS.filter(e=>{
+    if(evState.cat!=='all' && e.cat!==evState.cat) return false;
+    if(!terms.length) return true;
+    return terms.every(t=>evHay(e).includes(t));
+  });
+  const box=document.getElementById('evList');
+  if(!list.length){ box.innerHTML='<div class="no-res">No event matched. Try another keyword (e.g. Karbala, Ghadir, Badr, Hijrah).</div>'; return; }
+  box.innerHTML=list.map(e=>`
+    <div class="ev ${L==='en'?'':L}"${rtl?' dir="rtl"':''}>
+      <div class="ev-top"><span class="ev-cat">${esc(e.cat)}</span><span class="ev-when">${esc(e.when[L]||e.when.en)}</span></div>
+      <h3>${esc(e.t[L]||e.t.en)}</h3>
+      <div class="ev-place">📍 ${esc(e.place[L]||e.place.en)}</div>
+      <div class="ev-sum">${esc(e.sum[L]||e.sum.en)}</div>
+      <div class="ev-det">${esc(e.det[L]||e.det.en)}</div>
+      <button class="ev-toggle" onclick="evToggle(this)">${EV_LBL.read[L]}</button>
+    </div>`).join('');
+}
 
 // search on Enter + search-as-you-type
 document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') runSearch(); });
