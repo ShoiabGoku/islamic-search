@@ -268,6 +268,8 @@
   .quiz-q.rtl{direction:rtl;font-family:'Amiri',serif}
   .quiz-q.ur{direction:rtl;font-family:'Noto Nastaliq Urdu',serif;line-height:2.4;font-size:1.3rem}
   .quiz-q.fa{direction:rtl;font-family:'Vazirmatn',serif}
+  .quiz-verse{direction:rtl;font-family:'Amiri','Scheherazade New',serif;font-size:1.7rem;line-height:2.2;color:var(--green-800);text-align:center;background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:6px 0 20px}
+  body.dark .quiz-verse{background:#0c1a14;color:var(--gold-light)}
   .quiz-opts{display:grid;gap:12px}
   .opt{display:flex;align-items:center;gap:12px;text-align:left;padding:15px 18px;border:1.5px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font-family:inherit;font-size:1.02rem;cursor:pointer;transition:.18s;width:100%}
   .opt .k{width:28px;height:28px;flex:none;border-radius:50%;background:var(--cream);border:1px solid var(--line);display:grid;place-items:center;font-weight:600;color:var(--green-700);font-size:.85rem}
@@ -1678,21 +1680,89 @@ const quizState={diff:0, lang:'en', pool:[], idx:0, score:0};
   }));
 })();
 function quizShuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+const QUIZ_DIFF=['Mixed','Easy','Medium','Hard','Hardest'];
+const QUIZ_LIDX={en:0,ar:1,ur:2,fa:3};
+const QUIZ_LEN=10;
+
+/* ---- procedural question generators (effectively unlimited, never-repeating) ---- */
+function qRand(n){ return Math.floor(Math.random()*n); }
+function qPick(a){ return a[qRand(a.length)]; }
+function qSurahs(exclude,n){ const out=[],used=new Set([exclude&&exclude.s]); let g=0;
+  while(out.length<n && g++<200){ const s=LIB_QURAN[qRand(LIB_QURAN.length)]; if(used.has(s.s))continue; used.add(s.s); out.push(s); } return out; }
+// 1) which surah is this verse from
+function genSurahId(d){
+  const pool = d<=1 ? LIB_QURAN.filter(s=>s.s>=100||s.s===1||s.s===36||s.s===55)
+            : d===2 ? LIB_QURAN.filter(s=>s.s>=40) : LIB_QURAN;
+  const su=qPick(pool), v=qPick(su.v), opts=[su,...qSurahs(su,3)];
+  return { q:{en:"From which sūrah is this verse?",ar:"مِن أيِّ سورةٍ هذه الآية؟",ur:"یہ آیت کس سورت سے ہے؟",fa:"این آیه از کدام سوره است؟"},
+    verse:v[1], o:opts.map(s=>[s.nt,s.na,s.na,s.na]), a:0, cat:"Qur'an", d,
+    ex:`Sūrah ${su.s}. ${su.nt} — ${su.ne} (${su.s}:${v[0]}).` };
+}
+// 2) how many verses in surah X
+function genVerseCount(d){
+  const pool = d<=2 ? LIB_QURAN.filter(s=>s.s>=80||s.s<=12) : LIB_QURAN;
+  const su=qPick(pool), c=su.v.length, set=new Set([c]);
+  while(set.size<4){ let n=c+(qRand(13)-6); if(n<1)n=Math.abs(n)+1; set.add(n); }
+  const arr=[...set];
+  return { q:{en:`How many verses are in Sūrah ${su.nt} (${su.ne})?`,ar:`كم آيةً في سورة ${su.na}؟`,ur:`سورہ ${su.na} میں کتنی آیات ہیں؟`,fa:`سورهٔ ${su.na} چند آیه دارد؟`},
+    o:arr.map(n=>[''+n,''+n,''+n,''+n]), a:0, cat:"Qur'an", d, ex:`Sūrah ${su.nt} has ${c} verses.` };
+}
+// 3) order/number of a surah
+function genSurahOrder(d){
+  const su=qPick(LIB_QURAN), set=new Set([su.s]);
+  while(set.size<4){ let n=1+qRand(114); set.add(n); }
+  const arr=[...set];
+  return { q:{en:`What is the number (order) of Sūrah ${su.nt}?`,ar:`ما هو ترتيبُ سورة ${su.na} في المصحف؟`,ur:`سورہ ${su.na} کا نمبر کیا ہے؟`,fa:`شمارهٔ سورهٔ ${su.na} چند است؟`},
+    o:arr.map(n=>[''+n,''+n,''+n,''+n]), a:0, cat:"Qur'an", d, ex:`Sūrah ${su.nt} is number ${su.s}.` };
+}
+// 4) which line continues this verse (hard) — Arabic options
+function genContinue(d){
+  const su=qPick(LIB_QURAN.filter(s=>s.v.length>4)), i=qRand(su.v.length-1), correct=su.v[i+1][1];
+  const distract=[]; let g=0;
+  while(distract.length<3 && g++<80){ const t=qPick(qPick(LIB_QURAN).v)[1]; if(t!==correct && !distract.includes(t)) distract.push(t); }
+  return { q:{en:"Which line continues this verse?",ar:"أيُّ سطرٍ يُكمِلُ هذه الآية؟",ur:"اس آیت کو کون سی سطر مکمل کرتی ہے؟",fa:"کدام عبارت این آیه را کامل می‌کند؟"},
+    verse:su.v[i][1], o:[correct,...distract].map(t=>[t,t,t,t]), a:0, optAr:true, cat:"Qur'an", d, ex:`${su.nt} ${su.s}:${su.v[i+1][0]}.` };
+}
+// 5) meaning of this verse (non-Arabic UI) — options are translations in the chosen language
+function genTranslation(d){
+  if(quizState.lang==='ar') return genSurahId(d);
+  const su=qPick(d<=1?LIB_QURAN.filter(s=>s.s>=95):LIB_QURAN), v=qPick(su.v);
+  const distract=[]; let g=0;
+  while(distract.length<3 && g++<80){ const vv=qPick(qPick(LIB_QURAN).v); if(vv!==v && !distract.includes(vv)) distract.push(vv); }
+  return { q:{en:"What is the meaning of this verse?",ar:"ما معنى هذه الآية؟",ur:"اس آیت کا مفہوم کیا ہے؟",fa:"معنای این آیه چیست؟"},
+    verse:v[1], o:[v,...distract].map(x=>[x[2]||'',x[1]||'',x[3]||x[2]||'',x[4]||x[2]||'']), a:0, cat:"Qur'an", d, ex:`${su.nt} ${su.s}:${v[0]}.` };
+}
+function quizMakeOne(d){
+  if(!d) d=1+qRand(4);
+  // sometimes use a hand-written curated question of this difficulty
+  const curated=(typeof LIB_QUIZ!=='undefined')?LIB_QUIZ.filter(q=>q.d===d):[];
+  if(curated.length && Math.random()<0.22){ const q=qPick(curated); return {q:q.q,o:q.o,a:q.a,ex:q.ex,cat:q.cat,d:q.d,verse:q.verse}; }
+  const gens=[genSurahId];
+  if(d>=2){ gens.push(genVerseCount, genSurahOrder); }
+  if(d>=3){ gens.push(genContinue); }
+  if(quizState.lang!=='ar'){ gens.push(genTranslation); }
+  try{ return qPick(gens)(d); }catch(e){ return genSurahId(d); }
+}
 function quizStart(){
-  if(typeof window.LIB_QUIZ==='undefined'){ document.getElementById('quizRun').innerHTML='<div class="no-res">Quiz failed to load.</div>'; return; }
-  let pool=LIB_QUIZ.filter(q=>!quizState.diff || q.d===quizState.diff);
-  pool=quizShuffle(pool);
-  quizState.pool=pool.map(q=>{ const order=quizShuffle(q.o.map((_,i)=>i)); return {q, order, a:order.indexOf(q.a)}; });
-  quizState.idx=0; quizState.score=0;
+  if(typeof window.LIB_QURAN==='undefined'){ document.getElementById('quizRun').innerHTML='<div class="no-res">The Quran library is still loading — please try again in a moment.</div>'; return; }
+  const sess=[], seen=new Set(); let guard=0;
+  while(sess.length<QUIZ_LEN && guard++<400){
+    const item=quizMakeOne(quizState.diff);
+    if(!item || !item.o || item.o.length<2) continue;
+    const key=(item.verse||'')+'|'+(item.q&&item.q.en||'')+'|'+(item.o[0]&&item.o[0][0]);
+    if(seen.has(key)) continue; seen.add(key);
+    const order=quizShuffle(item.o.map((_,i)=>i));
+    sess.push({ q:item, order, a:order.indexOf(item.a) });
+  }
+  quizState.pool=sess; quizState.idx=0; quizState.score=0;
   document.getElementById('quizStart').style.display='none';
   renderQuiz();
 }
-const QUIZ_DIFF=['Mixed','Easy','Medium','Hard','Hardest'];
-const QUIZ_LIDX={en:0,ar:1,ur:2,fa:3};
 function renderQuiz(){
   const st=quizState; const item=st.pool[st.idx];
   if(!item){ return quizResult(); }
   const q=item.q; const L=st.lang; const rtl=L!=='en';
+  const verseBlock = q.verse ? `<div class="quiz-verse">${esc(q.verse)}</div>` : '';
   const run=document.getElementById('quizRun');
   run.innerHTML=`
     <div class="quiz-card">
@@ -1701,10 +1771,14 @@ function renderQuiz(){
         <span>Question ${st.idx+1} / ${st.pool.length}</span>
       </div>
       <div class="quiz-q ${L==='en'?'':L}"${rtl?' dir="rtl"':''}>${esc(q.q[L]||q.q.en)}</div>
+      ${verseBlock}
       <div class="quiz-opts" id="quizOpts">
         ${item.order.map((oi,k)=>{
-          const txt=q.o[oi][QUIZ_LIDX[L]]||q.o[oi][0];
-          return `<button class="opt ${L==='en'?'':L}"${rtl?' dir="rtl"':''} onclick="quizAnswer(${k})"><span class="k">${String.fromCharCode(65+k)}</span><span>${esc(txt)}</span></button>`;
+          const oAr=!!q.optAr;
+          const txt=q.o[oi][oAr?1:QUIZ_LIDX[L]]||q.o[oi][0];
+          const ocls='opt '+(oAr?'ar':(L==='en'?'':L));
+          const odir=(oAr||rtl)?' dir="rtl"':'';
+          return `<button class="${ocls}"${odir} onclick="quizAnswer(${k})"><span class="k">${String.fromCharCode(65+k)}</span><span>${esc(txt)}</span></button>`;
         }).join('')}
       </div>
       <div class="quiz-ex" id="quizEx"></div>
