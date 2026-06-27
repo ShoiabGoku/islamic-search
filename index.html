@@ -252,6 +252,21 @@
     @keyframes floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
   }
 
+  /* ----- ziyarat & duas ----- */
+  .dua-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:8px}
+  .dua-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;text-align:center;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .2s;box-shadow:0 6px 18px rgba(10,46,35,.07)}
+  .dua-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--gold)}
+  .dua-card .dua-ar{font-family:'Amiri',serif;font-size:1.6rem;color:var(--green-800);direction:rtl;line-height:1.6}
+  .dua-card .dua-en{font-family:'Cormorant Garamond',serif;color:var(--green-700);font-size:1.05rem;margin-top:4px}
+  .dua-card .dua-cat{font-size:.66rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .dua-line{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+  .dua-line .ar{font-family:'Amiri','Scheherazade New',serif;direction:rtl;text-align:right;font-size:calc(1.55rem*var(--ar-scale,1));line-height:2.3;color:var(--green-800)}
+  .dua-line .en{font-family:'Cormorant Garamond',serif;font-size:1.08rem;color:var(--ink);margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}
+  body.hide-tr #duaReader .en{display:none}
+  body.dark .dua-card,body.dark .dua-line{background:#11221b}
+  body.dark .dua-card .dua-ar,body.dark .dua-card .dua-en,body.dark .dua-line .ar{color:var(--gold-light)}
+  body.dark .dua-line .en{color:#e8e6db}
+
   /* ----- history events ----- */
   .ev-list{display:grid;gap:16px;margin-top:24px}
   .ev{background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:14px;padding:20px 22px;box-shadow:0 6px 18px rgba(10,46,35,.07);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
@@ -417,6 +432,7 @@
       <a href="#quran-library">Qur'an</a>
       <a href="#nahj-library">Nahj al-Balagha</a>
       <a href="#hadith-library">Hadith</a>
+      <a href="#duas">Ziyārāt &amp; Duʿās</a>
       <a href="#history">History</a>
       <a href="#quiz">Quiz</a>
       <a href="#maraji">Maraji'</a>
@@ -708,6 +724,25 @@
   </div>
 </section>
 
+<!-- ======= ZIYARAT & DUAS ======= -->
+<section id="duas">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Ziyārāt &amp; Supplications · الزيارات والأدعية</span>
+      <h2>Ziyārāt &amp; Duʿās</h2>
+      <p>The treasured ziyārāt and supplications — Ziyārat ʿĀshūrāʾ, Duʿāʾ Kumayl, Duʿāʾ al-Nudbah, Ḥadīth al-Kisāʾ and more — with Arabic and English, line by line.</p>
+    </div>
+    <div class="quiz-shell" style="max-width:900px">
+      <div class="search-box">
+        <input type="text" id="duaQ" placeholder="Search a ziyārah or duʿāʾ…  e.g. Kumayl / Ashura / Nudbah / كميل" />
+      </div>
+      <div class="dua-grid" id="duaGrid"></div>
+      <div id="duaReader" style="margin-top:24px"></div>
+      <p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:14px">Source: the official <a href="https://supplications.al-islam.org" target="_blank" rel="noopener" style="color:var(--green-600)">al-islam.org</a> Supplication Browser. Use the floating ۞ button for Arabic-only.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ======= ISLAMIC HISTORY ======= -->
 <section class="alt" id="history">
   <div class="wrap">
@@ -839,6 +874,7 @@
 <script src="library/quiz.js"></script>
 <script src="library/quiz2.js"></script>
 <script src="library/events.js"></script>
+<script src="library/duas.js"></script>
 <script>
 /* ============================================================
    DATA
@@ -2007,6 +2043,43 @@ function renderEvents(){
       <button class="ev-toggle" onclick="evToggle(this)">${EV_LBL.read[L]}</button>
     </div>`).join('');
 }
+
+/* ============================================================
+   ZIYARAT & DUAS
+   ============================================================ */
+(function(){
+  if(typeof window.LIB_DUAS==='undefined') return;
+  renderDuaGrid();
+  const inp=document.getElementById('duaQ');
+  if(inp) inp.addEventListener('input',renderDuaGrid);
+})();
+function renderDuaGrid(){
+  if(typeof window.LIB_DUAS==='undefined') return;
+  const q=norm((document.getElementById('duaQ').value||'').trim());
+  const list=LIB_DUAS.filter(d=> !q || norm(d.t.en+' '+d.t.ar+' '+d.cat+' '+d.id).includes(q));
+  const g=document.getElementById('duaGrid');
+  g.innerHTML = list.length ? list.map(d=>`
+    <div class="dua-card" onclick="openDua('${d.id}')">
+      <div class="dua-ar">${esc(d.t.ar)}</div>
+      <div class="dua-en">${esc(d.t.en)}</div>
+      <div class="dua-cat">${esc(d.cat)} · ${d.lines.length} lines</div>
+    </div>`).join('') : '<div class="no-res">No supplication matched.</div>';
+}
+function openDua(id){
+  const d=LIB_DUAS.find(x=>x.id===id); if(!d) return;
+  const r=document.getElementById('duaReader');
+  r.innerHTML=`<div style="text-align:center;margin:6px 0 18px">
+      <div class="dua-ar" style="font-size:2rem;font-family:'Amiri',serif;color:var(--green-800)">${esc(d.t.ar)}</div>
+      <div style="color:var(--muted);margin-top:2px">${esc(d.t.en)} · ${esc(d.cat)} · ${d.lines.length} lines</div>
+      <button class="btn" style="margin-top:12px;background:var(--green-700)" onclick="closeDua()">✕ Close</button>
+    </div>` + d.lines.map(l=>`
+    <div class="dua-line">
+      ${l[0]?`<div class="ar">${esc(l[0])}</div>`:''}
+      ${l[1]?`<div class="en">${esc(l[1])}</div>`:''}
+    </div>`).join('');
+  r.scrollIntoView({behavior:'smooth'});
+}
+function closeDua(){ document.getElementById('duaReader').innerHTML=''; document.getElementById('duas').scrollIntoView({behavior:'smooth'}); }
 
 // search on Enter + search-as-you-type
 document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') runSearch(); });
