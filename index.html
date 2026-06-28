@@ -1577,10 +1577,21 @@ function ptRender(d){
   const tz=(d.data.meta&&d.data.meta.timezone)?' · '+d.data.meta.timezone:'';
   note.textContent='Shia Ithnā ʿAsharī method'+tz;
 }
-function ptFetch(url){
+function ptFetch(url, fallbackUrl){
   const list=document.getElementById('ptList'); const note=document.getElementById('ptNote');
   note.textContent='Loading…'; list.innerHTML='';
-  fetch(url).then(r=>r.json()).then(ptRender).catch(()=>{ note.textContent='Could not load times (are you offline?).'; });
+  const ctrl=('AbortController'in window)?new AbortController():null;
+  const timer=setTimeout(()=>{ if(ctrl) ctrl.abort(); },12000);   // don't hang forever
+  fetch(url, ctrl?{signal:ctrl.signal}:{}).then(r=>r.json()).then(d=>{
+    clearTimeout(timer);
+    if(d && d.code===200 && d.data && d.data.timings){ ptRender(d); return; }
+    if(fallbackUrl){ ptFetch(fallbackUrl); return; }     // try the other lookup method
+    note.textContent='Could not find that place — try just the city name, or tap 📍 My location.';
+  }).catch(()=>{
+    clearTimeout(timer);
+    if(fallbackUrl){ ptFetch(fallbackUrl); return; }
+    note.textContent='Could not reach the prayer-times service — check your connection and tap Get Times again.';
+  });
 }
 function getPrayerTimes(){
   const city=document.getElementById('ptCity').value.trim();
@@ -1588,9 +1599,11 @@ function getPrayerTimes(){
   const note=document.getElementById('ptNote');
   if(!city && !country){ note.textContent='Enter a city or area, or tap 📍 My location.'; return; }
   prefs.city=city; prefs.country=country; savePrefs();
-  // timingsByAddress is far more forgiving (handles districts/areas), method=0 = Shia Ithnā ʿAsharī
   const address=[city,country].filter(Boolean).join(', ');
-  ptFetch('https://api.aladhan.com/v1/timingsByAddress?address='+encodeURIComponent(address)+'&method=0');
+  // primary: timingsByAddress (handles districts) — fallback: timingsByCity if that fails
+  const primary='https://api.aladhan.com/v1/timingsByAddress?address='+encodeURIComponent(address)+'&method=0';
+  const fallback = city ? 'https://api.aladhan.com/v1/timingsByCity?city='+encodeURIComponent(city)+'&country='+encodeURIComponent(country)+'&method=0' : null;
+  ptFetch(primary, fallback);
 }
 function getPrayerTimesByGeo(){
   const note=document.getElementById('ptNote');
@@ -1598,19 +1611,25 @@ function getPrayerTimesByGeo(){
   note.textContent='Locating you…';
   navigator.geolocation.getCurrentPosition(p=>{
     ptFetch('https://api.aladhan.com/v1/timings?latitude='+p.coords.latitude+'&longitude='+p.coords.longitude+'&method=0');
-  },()=>{ note.textContent='Location permission denied — type a city instead.'; },{timeout:10000});
+  },err=>{
+    note.textContent = (err&&err.code===1)
+      ? 'Location permission denied — allow location, or type a city.'
+      : 'Could not get your location — type a city instead.';
+  },{timeout:10000,maximumAge:600000});
 }
 if(prefs.city){ document.getElementById('ptCity').value=prefs.city; document.getElementById('ptCountry').value=prefs.country||''; getPrayerTimes(); }
 
 // Qibla — live compass that points to the Kaʿbah relative to the phone's heading
-let _qiblaBearing=null, _qiblaAttached=false;
+let _qiblaBearing=null, _qiblaAttached=false, _qiblaGotEvent=false;
 function findQibla(){
   const txt=document.getElementById('qiblaText');
-  // iOS 13+: must ask for motion/orientation permission inside the user gesture
+  const secure=(location.protocol==='https:'||location.hostname==='localhost');
+  if(!secure){ txt.textContent='Location & compass need a secure (https) connection — open the live site on https.'; }
+  // iOS 13+: ask for motion/orientation permission inside the user gesture
   if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
     DeviceOrientationEvent.requestPermission().then(s=>{ if(s==='granted') attachQiblaCompass(); }).catch(()=>{});
   } else { attachQiblaCompass(); }
-  if(!navigator.geolocation){ txt.textContent='Geolocation is not available.'; return; }
+  if(!navigator.geolocation){ txt.textContent='Location is not available on this device.'; return; }
   txt.textContent='Locating you…';
   navigator.geolocation.getCurrentPosition(p=>{
     const lat=p.coords.latitude*Math.PI/180, lon=p.coords.longitude*Math.PI/180;
@@ -1618,19 +1637,25 @@ function findQibla(){
     let b=Math.atan2(Math.sin(dl), Math.cos(lat)*Math.tan(klat)-Math.sin(lat)*Math.cos(dl))*180/Math.PI;
     _qiblaBearing=(b+360)%360;
     document.getElementById('qiblaNeedle').style.transform='rotate('+_qiblaBearing+'deg)';
-    txt.textContent = _qiblaAttached
-      ? 'Hold the phone flat and turn until the 🕋 points straight up — that is the Qibla.'
-      : 'Qibla is '+_qiblaBearing.toFixed(0)+'° from North. (No compass on this device — use the angle with a compass.)';
-  },()=>{ txt.textContent='Location permission was denied.'; },{timeout:10000,enableHighAccuracy:true});
+    const angle='Qibla is '+_qiblaBearing.toFixed(0)+'° clockwise from North.';
+    txt.textContent = _qiblaAttached ? angle+' Hold the phone flat and turn until the 🕋 points straight up.' : angle+' (No live compass here — use the angle with a compass.)';
+    // if a live compass was attached but no usable reading arrives, tell the user
+    if(_qiblaAttached) setTimeout(()=>{ if(!_qiblaGotEvent){ document.getElementById('qiblaText').textContent=angle+' (Live compass unavailable on this device — use the angle.)'; } },3000);
+  },err=>{
+    txt.textContent = (err&&err.code===1)
+      ? 'Location permission was denied — allow location for this site and tap Find Qibla again.'
+      : 'Could not get your location — try again, ideally outdoors with location on.';
+  },{timeout:10000,maximumAge:600000,enableHighAccuracy:true});
 }
 function attachQiblaCompass(){
   if(_qiblaAttached) return;
   function handle(e){
     let heading=null;
-    if(typeof e.webkitCompassHeading==='number') heading=e.webkitCompassHeading;        // iOS: degrees clockwise from N
-    else if(e.alpha!=null) heading=(360-e.alpha)%360;                                    // Android (absolute): approx
-    if(heading==null || _qiblaBearing==null) return;
-    const rot=(_qiblaBearing-heading+360)%360;                                           // Qibla relative to phone's "up"
+    if(typeof e.webkitCompassHeading==='number') heading=e.webkitCompassHeading;     // iOS: true degrees clockwise from N
+    else if(e.alpha!=null && (e.absolute===true || 'ondeviceorientationabsolute' in window)) heading=(360-e.alpha)%360; // only TRUE-north (absolute) headings
+    if(heading==null || _qiblaBearing==null) return;                                 // ignore unreliable relative readings
+    _qiblaGotEvent=true;
+    const rot=(_qiblaBearing-heading+360)%360;                                        // Qibla relative to phone's "up"
     const n=document.getElementById('qiblaNeedle'); if(n) n.style.transform='rotate('+rot+'deg)';
   }
   if('ondeviceorientationabsolute' in window){ window.addEventListener('deviceorientationabsolute',handle,true); _qiblaAttached=true; }
