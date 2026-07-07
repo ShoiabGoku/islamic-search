@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Noor al-Hidayah — Plain-English Code Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --green-900:#0a2e23; --green-800:#0e3d2e; --green-700:#12503b; --green-600:#1a6b50;
+    --gold:#c9a24a; --gold-light:#e7c878; --gold-soft:#f3e6c2;
+    --cream:#f7f2e7; --cream-2:#fbf8f0; --ink:#1d2420; --muted:#5d6b62;
+    --line:rgba(201,162,74,.28); --shadow:0 14px 40px rgba(10,46,35,.15); --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Poppins',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+  h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--green-800)}
+  header{background:linear-gradient(160deg,var(--green-900),var(--green-800));color:var(--cream);padding:56px 24px 44px;text-align:center}
+  header .bismillah{font-family:'Amiri',serif;font-size:1.6rem;color:var(--gold-light);margin-bottom:10px}
+  header h1{color:#fff;font-size:2.6rem;margin:0 0 8px}
+  header p{color:var(--gold-soft);max-width:620px;margin:0 auto;font-size:1.05rem}
+  nav.toc{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px 28px;margin:-30px auto 40px;max-width:820px;box-shadow:var(--shadow);position:relative;z-index:2}
+  nav.toc h2{margin-top:0;font-size:1.3rem}
+  nav.toc ol{columns:2;column-gap:30px;padding-left:20px;margin:0}
+  nav.toc li{margin-bottom:6px;break-inside:avoid}
+  nav.toc a{color:var(--green-700);text-decoration:none;font-size:.92rem}
+  nav.toc a:hover{text-decoration:underline}
+  section{margin:48px 0}
+  section > h2{font-size:1.9rem;border-bottom:2px solid var(--gold);padding-bottom:10px;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  section > h2 .num{background:var(--green-700);color:var(--gold-soft);width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Poppins';font-size:1rem;flex:none}
+  h3{font-size:1.3rem;margin:28px 0 10px}
+  p{margin:10px 0}
+  .analogy{background:var(--gold-soft);border-left:4px solid var(--gold);border-radius:10px;padding:14px 18px;margin:16px 0;font-style:italic}
+  .analogy b{font-style:normal;color:var(--green-800)}
+  .note{background:#eaf3ee;border-left:4px solid var(--green-600);border-radius:10px;padding:14px 18px;margin:16px 0}
+  .warn{background:#fbeaea;border-left:4px solid #c0504d;border-radius:10px;padding:14px 18px;margin:16px 0}
+  code{font-family:'Fira Code',monospace;background:#eef2ee;color:var(--green-800);padding:2px 6px;border-radius:5px;font-size:.88em}
+  pre{background:#0e1a15;color:#d8f0e2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-family:'Fira Code',monospace;font-size:.86rem;line-height:1.6;box-shadow:var(--shadow)}
+  pre .c{color:#7fa88f}
+  .cap{font-size:.82rem;color:var(--muted);margin-top:-8px;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92rem}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  th{background:var(--cream-2);color:var(--green-800)}
+  .filecard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:14px 0;box-shadow:0 4px 12px rgba(10,46,35,.06)}
+  .filecard b{color:var(--green-700);font-family:'Fira Code',monospace}
+  .badge{display:inline-block;font-size:.7rem;letter-spacing:.5px;text-transform:uppercase;background:var(--green-700);color:var(--gold-soft);padding:3px 10px;border-radius:20px;font-weight:600;margin-left:8px}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative}
+  .checklist li::before{content:"✓";position:absolute;left:0;color:var(--green-600);font-weight:700}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:30px 0;border-top:1px solid var(--line);margin-top:60px}
+  @media print{
+    header{background:none;color:var(--green-900)}
+    header h1,header p,header .bismillah{color:var(--green-900)}
+    nav.toc{margin-top:10px;box-shadow:none}
+    pre{box-shadow:none}
+  }
+  @media(max-width:640px){ nav.toc ol{columns:1} header h1{font-size:2rem} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+  <h1>Noor al-Hidayah — Code Guide</h1>
+  <p>A plain-English explanation of every technology and code pattern used to build your website — written for someone who has never coded before.</p>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#sec1">What your website actually is</a></li>
+    <li><a href="#sec2">The three languages: HTML, CSS, JavaScript</a></li>
+    <li><a href="#sec3">The files in your project, one by one</a></li>
+    <li><a href="#sec4">How the page is structured (HTML)</a></li>
+    <li><a href="#sec5">How it looks the way it does (CSS)</a></li>
+    <li><a href="#sec6">How it "thinks" and reacts (JavaScript)</a></li>
+    <li><a href="#sec7">The "library" data files — your content</a></li>
+    <li><a href="#sec8">Search — how typing a word finds a verse</a></li>
+    <li><a href="#sec9">Talking to the internet (APIs)</a></li>
+    <li><a href="#sec10">Remembering things: localStorage</a></li>
+    <li><a href="#sec11">The Service Worker & "offline" behaviour</a></li>
+    <li><a href="#sec12">Git &amp; GitHub — how changes reach the live site</a></li>
+    <li><a href="#sec13">Common words you'll keep seeing</a></li>
+    <li><a href="#sec14">What to do if something breaks</a></li>
+    <li><a href="#sec15">Quick reference cheat-sheet</a></li>
+  </ol>
+</nav>
+
+<section id="sec1">
+  <h2><span class="num">1</span>What your website actually is</h2>
+  <p>Your website, <b>Noor al-Hidayah</b>, is not one single "program." It is a folder of plain text files that a web browser (Chrome, Safari, Edge) reads and turns into the page you see. There is no hidden server doing calculations somewhere — everything happens right inside the visitor's own browser.</p>
+  <div class="analogy">Think of it like a <b>recipe book</b>. The file <code>index.html</code> is the recipe card that lists the ingredients and the order of steps. The browser is the cook: it reads the card and produces the finished dish (the page you see) fresh, every single time someone visits.</div>
+  <p>Because it's "just files," anyone can host it for free — which is what <b>GitHub Pages</b> does for you. Your files live at <code>github.com/ShoiabGoku/islamic-search</code>, and GitHub Pages serves them to the world at <code>https://shoiabgoku.github.io/islamic-search/</code>.</p>
+</section>
+
+<section id="sec2">
+  <h2><span class="num">2</span>The three languages: HTML, CSS, JavaScript</h2>
+  <p>Every website on the internet — yours included — is built from exactly three building blocks. Once you understand what job each one does, the rest of this guide will make sense.</p>
+  <table>
+    <tr><th>Language</th><th>Job</th><th>Analogy</th></tr>
+    <tr><td><b>HTML</b></td><td>The <i>content</i> and structure — headings, paragraphs, buttons, images</td><td>The <b>skeleton</b> of a body — bones that give it shape</td></tr>
+    <tr><td><b>CSS</b></td><td>The <i>appearance</i> — colours, fonts, spacing, layout</td><td>The <b>skin, clothes and make-up</b> — how it looks</td></tr>
+    <tr><td><b>JavaScript</b></td><td>The <i>behaviour</i> — what happens when you click, type, or scroll</td><td>The <b>muscles and brain</b> — what moves and reacts</td></tr>
+  </table>
+  <p>In your site, all three live inside one file, <code>index.html</code> — HTML content at the top, CSS rules inside a <code>&lt;style&gt;</code> block, and JavaScript inside a <code>&lt;script&gt;</code> block near the bottom.</p>
+</section>
+
+<section id="sec3">
+  <h2><span class="num">3</span>The files in your project, one by one</h2>
+  <p>Here is every file in your project folder and what it's for, in order of importance.</p>
+
+  <div class="filecard"><b>index.html</b><span class="badge">the whole website</span>
+    <p>This one file contains everything a visitor sees and everything the page does: the daily reminder, the search box, the Maraji cards, the Qur'an reader, the quiz, the prayer-times tool — all of it. It's large (~140,000 characters) because your site does a lot, but it's still just one recipe card.</p>
+  </div>
+
+  <div class="filecard"><b>library/ (folder)</b><span class="badge">your content, kept separate</span>
+    <p>Instead of typing the entire Qur'an directly into <code>index.html</code>, the actual text lives in separate files inside the <code>library</code> folder — <code>quran.js</code>, <code>nahj.js</code>, <code>duas.js</code>, <code>events.js</code>, <code>quiz.js</code>, and a <code>hadith/</code> and <code>fiqh/</code> sub-folder. This keeps <code>index.html</code> manageable and lets the browser only download a book's text when you actually open that book.</p>
+  </div>
+
+  <div class="filecard"><b>manifest.json</b><span class="badge">makes it installable</span>
+    <p>A small file that tells a phone "this website can behave like an app" — it gives the app a name, an icon, and a colour, so visitors can tap <i>Add to Home Screen</i>.</p>
+  </div>
+
+  <div class="filecard"><b>sw.js</b><span class="badge">service worker</span>
+    <p>A background helper script explained fully in Section 11. In short: it makes sure visitors always get your latest changes and never get stuck seeing an old, cached version.</p>
+  </div>
+
+  <div class="filecard"><b>icon.svg</b><span class="badge">the app icon</span>
+    <p>A small image (in SVG format — a format made of shapes and math instead of pixels, so it stays crisp at any size) used as your site's icon.</p>
+  </div>
+
+  <div class="filecard"><b>.nojekyll</b><span class="badge">a GitHub instruction</span>
+    <p>An empty file whose only job is to tell GitHub Pages "don't try to process my files, just serve them exactly as they are." Without it, GitHub sometimes ignores files/folders that start with an underscore.</p>
+  </div>
+
+  <div class="filecard"><b>README.md</b><span class="badge">the project's front page on GitHub</span>
+    <p>A plain description of the project, written in <b>Markdown</b> (a simple way to write bold text, headings, and lists using symbols like <code>**bold**</code> and <code>#</code>). GitHub automatically displays this file on your repository's homepage.</p>
+  </div>
+</section>
+
+<section id="sec4">
+  <h2><span class="num">4</span>How the page is structured (HTML)</h2>
+  <p>HTML is built from <b>tags</b> — words wrapped in angle brackets, like <code>&lt;p&gt;</code> — that label a piece of content. Most tags come in pairs: an opening tag and a closing tag (with a forward slash) that wrap around the content they describe.</p>
+  <pre>&lt;h2&gt;Search the Words of Guidance&lt;/h2&gt;
+&lt;p&gt;Search in English or Arabic across the Qur'an...&lt;/p&gt;</pre>
+  <p class="cap">This says: "Here is a heading, and here is a paragraph." The browser turns that into large bold text followed by normal text.</p>
+  <div class="analogy">HTML tags are like <b>labelled boxes</b> in a warehouse. <code>&lt;h2&gt;</code> is a box labelled "big heading," <code>&lt;p&gt;</code> is a box labelled "paragraph text," <code>&lt;button&gt;</code> is a box labelled "clickable button." The browser looks at the label on each box and displays its contents accordingly.</p>
+  <h3>The tags your site uses the most</h3>
+  <table>
+    <tr><th>Tag</th><th>What it means</th></tr>
+    <tr><td><code>&lt;section&gt;</code></td><td>One whole "chapter" of the page — e.g. the whole Quiz area, or the whole Search area</td></tr>
+    <tr><td><code>&lt;div&gt;</code></td><td>A generic container/box, used to group things together for styling</td></tr>
+    <tr><td><code>&lt;h1&gt; &lt;h2&gt; &lt;h3&gt;</code></td><td>Headings, from biggest (<code>h1</code>) to smaller</td></tr>
+    <tr><td><code>&lt;p&gt;</code></td><td>A paragraph of text</td></tr>
+    <tr><td><code>&lt;button&gt;</code></td><td>A clickable button</td></tr>
+    <tr><td><code>&lt;input&gt;</code></td><td>A box the visitor can type into (like the search bar)</td></tr>
+    <tr><td><code>&lt;a href="..."&gt;</code></td><td>A link to another page or website</td></tr>
+    <tr><td><code>&lt;select&gt;</code></td><td>A dropdown menu (like choosing a sūrah)</td></tr>
+    <tr><td><code>&lt;svg&gt;</code></td><td>A small drawing made of shapes — used for the rotating star and icons</td></tr>
+  </table>
+  <h3>Attributes — extra instructions inside a tag</h3>
+  <p>A tag can carry extra information called <b>attributes</b>, written inside the opening tag as <code>name="value"</code>.</p>
+  <pre>&lt;input type="text" id="q" placeholder="Search a topic..." /&gt;</pre>
+  <p class="cap"><code>type="text"</code> says "this is a text box." <code>id="q"</code> gives this exact box a unique name-tag, <code>"q"</code>, so JavaScript can find and read it later. <code>placeholder="..."</code> is the grey hint text shown before you type.</p>
+  <div class="note"><b>Why <code>id</code> matters:</b> every important box in your site has an <code>id</code> — a unique name tag. JavaScript uses that name tag constantly to say "go find the box called <code>q</code> and do something with it." You'll see <code>id="..."</code> everywhere, and <code>getElementById('q')</code> in the JavaScript is simply "go fetch the box with this name."</div>
+</section>
+
+<section id="sec5">
+  <h2><span class="num">5</span>How it looks the way it does (CSS)</h2>
+  <p>CSS rules follow one simple pattern: <b>"select something, then describe it."</b></p>
+  <pre>.btn {
+  background: linear-gradient(160deg, var(--green-700), var(--green-600));
+  color: var(--cream);
+  border-radius: 12px;
+  padding: 13px 22px;
+}</pre>
+  <p class="cap">This says: "Find everything with the label <code>btn</code> (a button), and make it have a green gradient background, cream-coloured text, rounded corners, and some internal spacing."</p>
+  <div class="analogy">If HTML is the skeleton, CSS is a big <b>style sheet handed to a tailor</b>: "every box labelled <code>btn</code> gets this fabric, this cut, this trim." Change the sheet once, and every button on the whole site updates instantly.</div>
+
+  <h3>The dot, the hash, and how CSS finds things</h3>
+  <table>
+    <tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr>
+    <tr><td><code>.name</code></td><td>A <b>class</b> — a label that can be reused on many boxes</td><td><code>.btn</code> styles every button</td></tr>
+    <tr><td><code>#name</code></td><td>An <b>ID</b> — a unique name for exactly one box</td><td><code>#search</code> styles only the search section</td></tr>
+    <tr><td><code>tag</code></td><td>Every box of that HTML type</td><td><code>h2</code> styles every heading-2</td></tr>
+  </table>
+
+  <h3>CSS variables — one dial that controls many things</h3>
+  <pre>:root {
+  --green-800: #0e3d2e;
+  --gold: #c9a24a;
+}
+h2 { color: var(--green-800); }</pre>
+  <p class="cap">Near the top of your CSS, a handful of colours are defined once, given nicknames like <code>--green-800</code> and <code>--gold</code>. Every other rule then says <code>var(--green-800)</code> instead of typing the colour code again. If you ever want to change your whole site's shade of green, you change it in <b>one place</b> and it updates everywhere.</p>
+
+  <h3>Dark mode &amp; responsive design</h3>
+  <p>You'll notice rules like <code>body.dark .res { ... }</code> — this means "when the page has been marked as dark mode, restyle this element." And rules inside <code>@media(max-width:820px){ ... }</code> only apply on small screens (phones) — this is how the site rearranges itself to fit a phone screen.</p>
+</section>
+
+<section id="sec6">
+  <h2><span class="num">6</span>How it "thinks" and reacts (JavaScript)</h2>
+  <p>JavaScript is the only one of the three languages that can actually <i>make decisions</i> and <i>respond to actions</i>. Everything interactive on your site — search, the quiz, dark mode, the prayer-times lookup — is JavaScript.</p>
+
+  <h3>Variables — labelled boxes that hold information</h3>
+  <pre>let score = 0;
+const greeting = "Assalāmu ʿAlaykum";</pre>
+  <p class="cap">A <b>variable</b> is a named container for a value. <code>let</code> means "this value can change later" (like a running quiz score). <code>const</code> means "this value is fixed and won't change" (like a fixed greeting text).</p>
+
+  <h3>Functions — a saved recipe you can reuse</h3>
+  <pre>function tasbihTap(){
+  tasbih.c++;
+  tasbih.total++;
+  tasbihRender();
+}</pre>
+  <p class="cap">A <b>function</b> is a named block of steps you can run over and over just by calling its name. This one, <code>tasbihTap</code>, runs every time you tap the Tasbīḥ counter's "+1" button: it adds one to the count, adds one to the total, and redraws the number on screen.</p>
+  <div class="analogy">A function is like a <b>saved recipe card</b> you can hand to the cook (the browser) any time you want that dish made again — instead of rewriting the whole recipe every time, you just say the recipe's name.</div>
+
+  <h3>"If this, then that" — conditions</h3>
+  <pre>if (tasbih.c >= tasbihCycle[tasbih.i][1]) {
+  tasbih.c = 0;
+  toast('Well done!');
+}</pre>
+  <p class="cap">"IF the count has reached the target, THEN reset it to zero and show a little congratulations message." This is how your site makes decisions — checking a condition, and only doing something if it's true.</p>
+
+  <h3>"Do this for every item" — loops</h3>
+  <pre>maraji.map(m => `&lt;div&gt;${m.n}&lt;/div&gt;`)</pre>
+  <p class="cap">You have a list of 8 Maraji stored as data. This one line says: "for <i>every</i> Marjaʿ in the list, build one little card of HTML for them." That's how 8 cards appear on screen from a single line of code, instead of you having to hand-write 8 separate cards.</p>
+
+  <h3>Events — "when this happens, do that"</h3>
+  <pre>document.getElementById('q')
+  .addEventListener('keydown', e => { if(e.key==='Enter') runSearch(); });</pre>
+  <p class="cap">"Find the search box (<code>id="q"</code>). <b>Listen</b> for a key being pressed. <b>When</b> that key is Enter, run the search." This pattern — <code>addEventListener</code> — is how your whole site reacts to clicks, typing, and touches. It's the electrical wiring that connects a button to an action.</p>
+
+  <h3>Objects and arrays — how your data is organised</h3>
+  <pre>const marja = { n:"Sayyid Ali al-Sistani", status:"Najaf · Living", books:[...] };
+const maraji = [ marja, marja2, marja3 ];</pre>
+  <p class="cap">An <b>object</b> (curly braces <code>{ }</code>) groups related facts together — like a filled-out index card for one Marjaʿ (name, status, books). An <b>array</b> (square brackets <code>[ ]</code>) is a numbered list of things — like a box holding many index cards, one after another. Your entire Qur'an, all your quiz questions, and all your Maraji are stored exactly this way.</p>
+</section>
+
+<section id="sec7">
+  <h2><span class="num">7</span>The "library" data files — your content</h2>
+  <p>Every book on your site (Qur'an, Nahj al-Balāghah, hadith, duʿās, quiz questions, history events) is stored as one big <b>array of objects</b>, saved inside its own file in the <code>library</code> folder.</p>
+  <pre>window.LIB_QURAN = [
+  { s:1, na:"الفاتحة", nt:"Al-Fatihah", v:[ [1,"بِسْمِ اللَّهِ...","In the Name of Allah..."] ] }
+];</pre>
+  <p class="cap"><code>window.LIB_QURAN</code> is the nickname the rest of your code uses to find this data. <code>s</code> is the sūrah number, <code>na</code> is its Arabic name, <code>nt</code> is its transliterated name, and <code>v</code> is the list of verses — each verse itself being a small list of <code>[number, Arabic text, translation]</code>.</p>
+  <div class="note">This is why the library files load with a <code>&lt;script&gt;</code> tag near the top of <code>index.html</code>: they must arrive <i>before</i> the search and reader code tries to use them — like ingredients needing to be on the counter before the cook can start.</div>
+  <table>
+    <tr><th>File</th><th>What it holds</th></tr>
+    <tr><td><code>library/quran.js</code></td><td>All 114 sūrahs, 6,236 verses — Arabic + English + Urdu + Farsi</td></tr>
+    <tr><td><code>library/nahj.js</code></td><td>Nahj al-Balāghah — sermons, letters, sayings</td></tr>
+    <tr><td><code>library/duas.js</code></td><td>Ziyārāt &amp; duʿās (Kumayl, Nudbah, ʿĀshūrāʾ, etc.)</td></tr>
+    <tr><td><code>library/events.js</code></td><td>Islamic history events, four languages each</td></tr>
+    <tr><td><code>library/quiz.js</code>, <code>quiz2.js</code></td><td>The hand-written quiz question bank</td></tr>
+    <tr><td><code>library/hadith/*.js</code>, <code>library/fiqh/*.js</code></td><td>Al-Kāfī and other hadith books; the Maraji's fiqh rulings</td></tr>
+  </table>
+</section>
+
+<section id="sec8">
+  <h2><span class="num">8</span>Search — how typing a word finds a verse</h2>
+  <p>Search sounds complicated, but it boils down to three plain-English steps, repeated for every item in a list:</p>
+  <ol>
+    <li><b>Clean up</b> what you typed and the text being searched, so spelling differences don't matter (capital vs lowercase, or Arabic diacritics/vowel-marks) — this cleanup step is called <code>norm()</code> ("normalize") in your code.</li>
+    <li><b>Check</b> whether the cleaned-up text <i>contains</i> your cleaned-up search word.</li>
+    <li><b>Collect</b> every item where the answer was "yes," and display those as results.</li>
+  </ol>
+  <pre>function searchQuran(terms, limit){
+  const out = [];
+  for (const su of LIB_QURAN) {
+    for (const v of su.v) {
+      const hay = norm(v[1] + ' ' + v[2]);          // clean up the verse text
+      if (terms.every(t => hay.includes(t))) {       // does it contain every search word?
+        out.push({ ar: v[1], tr: v[2], ref: su.nt+' '+su.s+':'+v[0] });
+      }
+    }
+  }
+  return out;
+}</pre>
+  <p class="cap">This walks through every sūrah, then every verse inside it, cleans up the verse text, and checks if it contains all your search words. Every match gets added to the results list, which is then shown on screen.</p>
+  <div class="analogy">It's exactly like using <b>Ctrl+F "Find"</b> in a Word document — except your code does that "Find" across 6,236 verses (or thousands of hadith) in a fraction of a second, and does it separately for Arabic, English, Urdu and Farsi.</div>
+</section>
+
+<section id="sec9">
+  <h2><span class="num">9</span>Talking to the internet (APIs)</h2>
+  <p>Some features — prayer times and the Qibla direction — need information your site doesn't have built in (today's exact prayer times for a specific city depend on the date and your location). For these, your site sends a request over the internet to another organisation's computer and asks for an answer. This is called an <b>API</b> call (API = "a way for one program to ask another program for information").</p>
+  <pre>fetch('https://api.aladhan.com/v1/timingsByAddress?address=Karbala&method=0')
+  .then(r =&gt; r.json())
+  .then(data =&gt; ptRender(data));</pre>
+  <p class="cap"><code>fetch</code> means "go and ask this web address for information." Because the answer doesn't arrive instantly (it has to travel across the internet), the code says <code>.then(...)</code> — "and THEN, once the answer arrives, do this with it" (in this case, display the prayer times).</p>
+  <div class="analogy">This is like <b>posting a letter and waiting for a reply</b>. You don't freeze in place waiting by the mailbox — you go on with other things, and <code>.then()</code> is simply "when the reply letter arrives, open it and do this."</div>
+  <table>
+    <tr><th>Feature</th><th>Which outside service it asks</th></tr>
+    <tr><td>Prayer times</td><td><code>aladhan.com</code> — a free Islamic prayer-times calculation service</td></tr>
+    <tr><td>Qibla direction</td><td>Calculated directly on your phone using your GPS location — no outside service needed</td></tr>
+    <tr><td>Reciter audio</td><td><code>everyayah.com</code> — a free Qur'an audio-recitation library</td></tr>
+  </table>
+  <div class="warn"><b>Why these sometimes fail:</b> because your site is <i>asking someone else's computer</i> for an answer, it can only work if (1) the visitor has internet, (2) that outside service is currently online, and (3) the visitor's browser allows the request (e.g. has granted location permission). None of that is something your own code controls — which is why I added automatic retries and clear error messages for these two features.</div>
+</section>
+
+<section id="sec10">
+  <h2><span class="num">10</span>Remembering things: localStorage</h2>
+  <p>Normally, a website forgets everything the moment you close the tab. But your site remembers your dark-mode choice, your bookmarks, your tasbīḥ count, and your last-searched city — even after closing the browser. It does this with something called <b>localStorage</b>: a small private storage locker that belongs to your site, saved inside the visitor's own browser.</p>
+  <pre>localStorage.setItem('noor_bookmarks', JSON.stringify(bookmarksList));
+const saved = JSON.parse(localStorage.getItem('noor_bookmarks') || '[]');</pre>
+  <p class="cap"><code>setItem</code> saves something into the locker under a name tag (<code>'noor_bookmarks'</code>). <code>getItem</code> takes it back out later. Because the locker can only hold plain text, <code>JSON.stringify</code> "flattens" a list/object into text before saving, and <code>JSON.parse</code> "unflattens" it back into a usable list when reading it.</p>
+  <div class="note">This locker is <b>per-browser, per-device</b> — it's not a shared account. If you bookmark a verse on your laptop, it won't appear on your phone, because each browser has its own separate locker.</div>
+</section>
+
+<section id="sec11">
+  <h2><span class="num">11</span>The Service Worker &amp; "offline" behaviour</h2>
+  <p>A <b>service worker</b> (<code>sw.js</code>) is a small helper script that runs quietly in the background, separate from the page itself, mainly used to make websites work offline or load faster on repeat visits by keeping a private copy of files.</p>
+  <div class="warn"><b>Why we changed this:</b> early on, this caused the exact "old version keeps showing up" problem you ran into. The private copy it kept was getting shown to visitors <i>instead of</i> the newest version. I rewrote it into a <b>self-destructing</b> service worker — on your visitors' next visit, it automatically clears its private copy, turns itself off, and steps out of the way, so everyone always sees your latest updates straight from the real site.</div>
+  <p>Practically, this means: you (and everyone else) will always get the newest version automatically now — no more manual cache-clearing needed going forward.</p>
+</section>
+
+<section id="sec12">
+  <h2><span class="num">12</span>Git &amp; GitHub — how changes reach the live site</h2>
+  <p>Every change I've made to your site follows the same three-step journey from "edited file on the computer" to "visible on your live website."</p>
+  <table>
+    <tr><th>Step</th><th>Command</th><th>Plain English</th></tr>
+    <tr><td>1. Stage</td><td><code>git add</code></td><td>"Mark these changed files as ready to be saved"</td></tr>
+    <tr><td>2. Commit</td><td><code>git commit -m "..."</code></td><td>"Save a snapshot of these files, with a short note describing what changed"</td></tr>
+    <tr><td>3. Push</td><td><code>git push</code></td><td>"Upload that snapshot to GitHub" — this is the moment it reaches the live site</td></tr>
+  </table>
+  <div class="analogy"><b>Git</b> is like a save-game system for your website: every commit is a save point you (or I) could rewind to if something ever went wrong. <b>GitHub</b> is the cloud drive that stores those save points and, because Pages is switched on, also serves the latest one to the public as your live website.</div>
+  <p><b>GitHub Pages</b> is the free hosting service that watches your <code>main</code> branch (the "official" copy of your project) and automatically republishes your site every time a push arrives — normally within about a minute.</p>
+</section>
+
+<section id="sec13">
+  <h2><span class="num">13</span>Common words you'll keep seeing</h2>
+  <table>
+    <tr><th>Word</th><th>Plain-English meaning</th></tr>
+    <tr><td>Repository ("repo")</td><td>The project's folder, as stored on GitHub — yours is <code>islamic-search</code></td></tr>
+    <tr><td>Branch</td><td>A named copy of the project's history; yours is called <code>main</code>, the "official" one</td></tr>
+    <tr><td>Commit</td><td>One saved snapshot of changes, with a message explaining what changed and why</td></tr>
+    <tr><td>Push / Pull</td><td>Upload your changes to GitHub / download the latest changes from GitHub</td></tr>
+    <tr><td>Function</td><td>A named, reusable block of steps ("recipe")</td></tr>
+    <tr><td>Variable</td><td>A named container holding a piece of information</td></tr>
+    <tr><td>Array</td><td>A numbered list of things</td></tr>
+    <tr><td>Object</td><td>A set of labelled facts grouped together (like a filled index card)</td></tr>
+    <tr><td>API</td><td>A way for your site to ask another organisation's computer for information</td></tr>
+    <tr><td>Console</td><td>A hidden panel (press F12) that shows technical error messages, for diagnosing problems</td></tr>
+    <tr><td>Cache</td><td>A saved copy of a file kept for speed — can sometimes go "stale" and show old content</td></tr>
+    <tr><td>Responsive</td><td>A layout that reshapes itself to fit different screen sizes (phone vs laptop)</td></tr>
+    <tr><td>RTL</td><td>"Right to Left" — the text direction used for Arabic, Urdu and Farsi</td></tr>
+  </table>
+</section>
+
+<section id="sec14">
+  <h2><span class="num">14</span>What to do if something breaks</h2>
+  <p>You don't need to read code to investigate a problem — you just need to know where to look.</p>
+  <ul class="checklist">
+    <li><b>Hard-refresh first.</b> On the keyboard, press <code>Ctrl + Shift + R</code>. This clears out any old cached version and is the fix for most "it looks wrong" or "it stopped working" reports.</li>
+    <li><b>Check the address bar says <code>https://</code>.</b> Location, compass and some other features only work on a secure (https) connection — never on a plain file or <code>http://</code>.</li>
+    <li><b>Open the Console (F12 → Console tab).</b> Reload the page and try the broken feature. If you see <b>red text</b>, that's a genuine code error — copy the exact red text and send it to me; I can usually diagnose it from that alone. If there's <b>no red text</b> but it still fails, it's almost always something outside the code: no internet, a permission the visitor denied, or the outside service (like the prayer-times API) being briefly down.</li>
+    <li><b>Describe it precisely.</b> "It doesn't work" is hard to fix. "On my Android phone, in Chrome, when I search for صبر, no results appear" is something I can immediately investigate and reproduce.</li>
+  </ul>
+</section>
+
+<section id="sec15">
+  <h2><span class="num">15</span>Quick reference cheat-sheet</h2>
+  <p>Keep this section for a fast reminder of what everything is.</p>
+  <table>
+    <tr><th>Symbol / Word</th><th>Meaning in one line</th></tr>
+    <tr><td><code>&lt;tag&gt;...&lt;/tag&gt;</code></td><td>An HTML label wrapping a piece of content</td></tr>
+    <tr><td><code>id="..."</code></td><td>A unique name tag for one specific element</td></tr>
+    <tr><td><code>class="..."</code></td><td>A reusable style label shared by many elements</td></tr>
+    <tr><td><code>.className { }</code></td><td>A CSS rule: "style everything with this class this way"</td></tr>
+    <tr><td><code>function name(){ }</code></td><td>A saved, reusable block of steps</td></tr>
+    <tr><td><code>if (...) { }</code></td><td>"Only do this if the condition is true"</td></tr>
+    <tr><td><code>for</code> / <code>.map()</code> / <code>.forEach()</code></td><td>"Repeat this for every item in the list"</td></tr>
+    <tr><td><code>addEventListener</code></td><td>"When this happens (click, type...), run this"</td></tr>
+    <tr><td><code>fetch(...)</code></td><td>"Ask an outside website for information"</td></tr>
+    <tr><td><code>localStorage</code></td><td>The browser's private memory locker for your site</td></tr>
+    <tr><td><code>[ ]</code></td><td>An array — a numbered list</td></tr>
+    <tr><td><code>{ }</code></td><td>An object — a set of labelled facts, OR a block of code steps</td></tr>
+    <tr><td><code>// text</code></td><td>A comment — a note for humans, ignored by the computer</td></tr>
+  </table>
+</section>
+
+<footer>
+  Prepared for Noor al-Hidayah · نور الهداية — <a href="https://shoiabgoku.github.io/islamic-search/" style="color:var(--green-700)">shoiabgoku.github.io/islamic-search</a><br>
+  Tip: open this file in your browser, then press <code>Ctrl+P</code> and "Save as PDF" to keep a printable copy.
+</footer>
+
+</div>
+</body>
+</html>
