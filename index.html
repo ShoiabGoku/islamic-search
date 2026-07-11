@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Nastaliq+Urdu:wght@400;700&family=Vazirmatn:wght@400;500;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <meta name="theme-color" content="#0e3d2e" />
 <link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
 <script>
   // Apply saved preferences before paint (prevents flash)
   try{
@@ -405,6 +407,7 @@
   <button id="trBtn" title="Show / hide translation" onclick="toggleTr()">۞</button>
   <button id="langBtn" title="Translation language (All / English / Urdu / Farsi)" onclick="cycleLang()">ALL</button>
   <button title="My bookmarks" onclick="openBookmarks()">★</button>
+  <button id="installBtn" title="Install as an app" onclick="installApp()">📲</button>
   <button title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 </div>
 
@@ -1705,11 +1708,26 @@ function handleHash(){
 window.addEventListener('hashchange',handleHash);
 if(location.hash) setTimeout(handleHash,80);
 
-/* ---- Remove any old service worker + caches (they caused stale content) ---- */
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+/* ---- App mode: register the network-first service worker (always-fresh + offline fallback) ---- */
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
-if(window.caches){ caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{}); }
+
+/* ---- Install-as-app button (appears when the browser allows installing) ---- */
+let _installEvt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); _installEvt=e;
+  const b=document.getElementById('installBtn'); if(b) b.style.display='';
+});
+function installApp(){
+  if(_installEvt){
+    _installEvt.prompt();
+    _installEvt.userChoice.finally(()=>{ _installEvt=null; const b=document.getElementById('installBtn'); if(b) b.style.display='none'; });
+  } else {
+    toast('iPhone: Share → Add to Home Screen · Android: menu ⋮ → Install app');
+  }
+}
+window.addEventListener('appinstalled',()=>{ toast('App installed ✓'); const b=document.getElementById('installBtn'); if(b) b.style.display='none'; });
 
 /* ---- "Also search all hadith" toggle (opt-in, loads ~32 MB once) ---- */
 const ALL_HADITH_KEYS=['kafi1','kafi2','kafi3','kafi4','kafi5','kafi6','kafi7','kafi8','uyun1','uyun2','khisal','huquq'];
