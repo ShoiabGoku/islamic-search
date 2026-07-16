@@ -369,6 +369,19 @@
   .dedication{text-align:center;margin-top:22px;padding:18px;border-top:1px solid var(--line)}
   .dedication .ar{font-family:'Amiri',serif;font-size:1.5rem;color:var(--gold);margin-bottom:6px}
   .dedication p{color:var(--muted);font-style:italic;font-family:'Cormorant Garamond',serif;font-size:1.1rem}
+  /* developer's message + contact */
+  .dev-msg{background:linear-gradient(160deg,var(--cream-2),#fff);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 26px;margin-top:26px;text-align:center;box-shadow:var(--shadow)}
+  .dev-msg .ar{font-family:'Amiri',serif;font-size:1.6rem;color:var(--green-800);margin-bottom:12px}
+  .dev-msg p{color:var(--ink);font-family:'Cormorant Garamond',serif;font-size:1.18rem;line-height:1.7;max-width:640px;margin:0 auto 10px}
+  .dev-msg .sign{color:var(--muted);font-size:.9rem;font-style:italic;margin-top:6px}
+  .contact-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:18px}
+  .contact-row a{display:inline-flex;align-items:center;gap:8px;background:var(--green-700);color:var(--gold-soft);
+    padding:11px 20px;border-radius:30px;font-size:.9rem;transition:.2s;text-decoration:none}
+  .contact-row a:hover{background:var(--gold);color:var(--green-900);transform:translateY(-2px)}
+  body.dark .dev-msg{background:linear-gradient(160deg,#11221b,#15281f)}
+  body.dark .dev-msg .ar{color:var(--gold-light)}
+  body.dark .dev-msg p{color:#e8e6db}
 
   /* ----- DARK MODE ----- */
   body.dark{background:#0a1712;color:#e8e6db}
@@ -836,6 +849,26 @@
     <div class="dedication">
       <div class="ar">إِلَىٰ أُمِّي ۖ رَبِّ ارْحَمْهَا كَمَا رَبَّتْنِي صَغِيرًا</div>
       <p>For the love of my mother — every good that comes from this work,<br>may its reward reach her. “My Lord, have mercy upon her as she raised me when I was small.”</p>
+    </div>
+
+    <div class="dev-msg">
+      <div class="ar">هَيْهَاتَ مِنَّا الذِّلَّةُ</div>
+      <p>
+        As a humble follower of Imam Ḥusayn (ع) and the Ahl al-Bayt (عليهم السلام), I built this portal with
+        <strong>love, trust and humanity</strong> — the love Karbalāʾ taught us, the trust that truth outlives every
+        tyranny, and the belief that knowledge and compassion belong to every human being, freely. Whatever is good
+        in this work is from Allah; whatever falls short is from me. If it brings even one heart closer to the light
+        of Muḥammad (ص) and his purified family, it has served its purpose.
+      </p>
+      <p class="sign">— the developer, a servant of the Ahl al-Bayt (ع)</p>
+      <div class="contact-row">
+        <a href="mailto:shoiabakhtar909@gmail.com">✉️ shoiabakhtar909@gmail.com</a>
+        <a href="tel:7051170484">📞 7051170484</a>
+      </div>
+      <p class="sign" style="margin-top:14px">
+        Any new ideas or suggestions to make this site and app better are <strong>most welcome</strong> —
+        write or call, your feedback is a gift.
+      </p>
     </div>
   </div>
 </section>
