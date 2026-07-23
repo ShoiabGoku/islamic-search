@@ -431,6 +431,13 @@
     <div id="bmList"></div>
   </div>
 </div>
+<!-- ======= INSTALL HELP MODAL ======= -->
+<div class="modal" id="installModal">
+  <div class="modal-inner">
+    <h3>Install the App 📲 <button class="close" onclick="closeInstall()">✕</button></h3>
+    <div id="installBody" style="line-height:1.8"></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <!-- ======= NAV ======= -->
@@ -1746,21 +1753,50 @@ if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostn
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
-/* ---- Install-as-app button (appears when the browser allows installing) ---- */
+/* ---- Install-as-app: native prompt where possible, clear instructions everywhere else ---- */
 let _installEvt=null;
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault(); _installEvt=e;
-  const b=document.getElementById('installBtn'); if(b) b.style.display='';
-});
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); _installEvt=e; });
+window.addEventListener('appinstalled',()=>{ toast('App installed ✓'); const b=document.getElementById('installBtn'); if(b) b.style.display='none'; });
+function isAppInstalled(){ return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }
+function isInAppBrowser(){ return /FBAN|FBAV|Instagram|Line|Twitter|WhatsApp|Snapchat|Telegram|; wv\)|WebView/i.test(navigator.userAgent||''); }
+// hide the install button once the app is already installed
+if(isAppInstalled()){ const b=document.getElementById('installBtn'); if(b) b.style.display='none'; }
 function installApp(){
-  if(_installEvt){
+  if(isAppInstalled()){ toast('The app is already installed ✓'); return; }
+  if(_installEvt){                                  // Android / desktop Chrome-Edge: real one-tap install
     _installEvt.prompt();
     _installEvt.userChoice.finally(()=>{ _installEvt=null; const b=document.getElementById('installBtn'); if(b) b.style.display='none'; });
-  } else {
-    toast('iPhone: Share → Add to Home Screen · Android: menu ⋮ → Install app');
+    return;
   }
+  showInstallHelp();                                // iPhone, in-app browsers, or prompt not ready → clear steps
 }
-window.addEventListener('appinstalled',()=>{ toast('App installed ✓'); const b=document.getElementById('installBtn'); if(b) b.style.display='none'; });
+function showInstallHelp(){
+  const ua=navigator.userAgent||'', iOS=/iPad|iPhone|iPod/.test(ua);
+  const S='style="background:var(--gold-soft);color:var(--green-900);padding:1px 7px;border-radius:6px;font-weight:600"';
+  let html;
+  if(isInAppBrowser()){
+    html=`<p>You're viewing this <b>inside another app</b> (like WhatsApp, Instagram or Facebook). Those in-app browsers can't install apps.</p>
+      <p><b>First open this page in a real browser:</b></p>
+      <ol><li>Tap the menu <b ${S}>⋯</b> (usually a corner of the screen).</li>
+      <li>Choose <b>“Open in Chrome”</b> (Android) or <b>“Open in Safari”</b> (iPhone).</li>
+      <li>Then follow the install step there.</li></ol>`;
+  } else if(iOS){
+    html=`<p>On <b>iPhone / iPad</b>, Apple only allows adding web apps manually (there is no one-tap install button — this is Apple's rule, not a fault of the site):</p>
+      <ol><li>Make sure you're in <b>Safari</b> (not Chrome).</li>
+      <li>Tap the <b ${S}>Share ⬆︎</b> button at the bottom of the screen.</li>
+      <li>Scroll down and tap <b ${S}>Add to Home Screen</b>.</li>
+      <li>Tap <b>Add</b> — the Noor al-Hidayah icon appears on your home screen. 🕌</li></ol>`;
+  } else {
+    html=`<p>To install on <b>Android</b> or a <b>computer</b>:</p>
+      <ol><li>Open the browser menu <b ${S}>⋮</b> (top-right in Chrome).</li>
+      <li>Tap <b ${S}>Install app</b> (or “Add to Home screen”).</li>
+      <li>Confirm — it opens like a normal app afterwards.</li></ol>
+      <p style="color:var(--muted);font-size:.9rem">If you don't see “Install app”, your browser may have offered it earlier, or it's already installed. Try Chrome if you're using a different browser.</p>`;
+  }
+  const body=document.getElementById('installBody'); if(body) body.innerHTML=html;
+  document.getElementById('installModal').classList.add('open');
+}
+function closeInstall(){ document.getElementById('installModal').classList.remove('open'); }
 
 /* ---- "Also search all hadith" toggle (opt-in, loads ~32 MB once) ---- */
 const ALL_HADITH_KEYS=['kafi1','kafi2','kafi3','kafi4','kafi5','kafi6','kafi7','kafi8','uyun1','uyun2','khisal','huquq'];
@@ -2163,6 +2199,7 @@ let _st; document.getElementById('q').addEventListener('input',()=>{ clearTimeou
 document.getElementById('srcFilter').addEventListener('change',runSearch);
 // close bookmarks modal on backdrop click
 document.getElementById('bmModal').addEventListener('click',e=>{ if(e.target.id==='bmModal') closeBookmarks(); });
+document.getElementById('installModal').addEventListener('click',e=>{ if(e.target.id==='installModal') closeInstall(); });
 </script>
 
 <!-- Visitor analytics (GoatCounter — privacy-friendly, no cookies) -->
